@@ -1,0 +1,21 @@
+# Jeton d'authentification clasp — NE JAMAIS committer
+.clasprc.json
+.clasp-*.json
+
+# Dépendances Node
+node_modules/
+
+# Sauvegardes locales / fichiers système
+*.bak
+*.bak.html
+.DS_Store
+
+# Tout matériel sensible : les secrets vivent dans les Propriétés du script
+# et dans 1Password, JAMAIS dans ce repo.
+.env
+.env.*
+secrets*.json
+*credentials*.json
+client_secret*.json
+*.key
+*.pem

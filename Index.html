@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <base target="_top">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    input, button { padding: .6rem; font-size: 1rem; }
+    .row { padding: .4rem 0; border-bottom: 1px solid #eee; }
+    #status { color: #b00; min-height: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1><!-- Titre de l'application --></h1>
+
+  <form id="entry-form">
+    <input id="name" placeholder="Nom" required>
+    <input id="value" placeholder="Valeur" required>
+    <button type="submit">Enregistrer</button>
+  </form>
+
+  <p id="status"></p>
+  <div id="list">Chargement…</div>
+
+  <script>
+    // getData() returns a JSON string (see the comment in Code.js). Always JSON.parse it:
+    // google.script.run drops raw arrays of objects to null in the browser.
+    function loadData() {
+      google.script.run
+        .withSuccessHandler(function (json) {
+          var rows = JSON.parse(json);
+          document.getElementById('list').innerHTML = rows.map(function (r) {
+            return '<div class="row">' + r.name + ' — ' + r.value + '</div>';
+          }).join('');
+        })
+        .withFailureHandler(function (err) {
+          document.getElementById('status').textContent = 'Erreur : ' + err.message;
+        })
+        .getData();
+    }
+
+    document.getElementById('entry-form').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var payload = {
+        name: document.getElementById('name').value,
+        value: document.getElementById('value').value
+      };
+      document.getElementById('status').textContent = '';
+      google.script.run
+        .withSuccessHandler(function () {
+          document.getElementById('entry-form').reset();
+          loadData();
+        })
+        .withFailureHandler(function (err) {
+          document.getElementById('status').textContent = 'Erreur : ' + err.message;
+        })
+        .saveEntry(payload);
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
