@@ -6,9 +6,10 @@
 >
 > > « Lis `AGENTS.md` et aide-moi à démarrer mon application. »
 >
-> L'IA accompagne ensuite le collaborateur **pas à pas**, jusqu'à une application en
-> ligne. Pas besoin de savoir coder : tu valides, tu fais les quelques clics côté
-> Google/GitHub quand on te le demande, l'IA fait le reste.
+> L'IA commence par **mettre en place le projet** (outils, dépôt GitHub, dossier Drive,
+> déploiement d'un squelette en ligne) et ne te demande **ce que doit faire l'application
+> qu'à la toute fin**, une fois la plomberie prête. Pas besoin de savoir coder : tu
+> valides, tu fais les quelques clics côté Google/GitHub, l'IA fait le reste.
 
 ---
 
@@ -32,6 +33,24 @@ En permanence :
 - Si quelque chose sort du périmètre (nouveau scope sensible, changement d'URL publique,
   doute sur un secret) → **arrête-toi et renvoie vers FX** (§11).
 - **Respecte les 9 règles d'or ci-dessous sans exception.**
+
+### ⚠️ Ordre impératif au démarrage
+
+À la **première** conversation, procède dans cet ordre — **ne te lance pas dans les
+fonctionnalités de l'app avant que la plomberie soit en place** :
+
+1. **Demande d'abord : « As-tu déjà un projet Apps Script existant, ou on part de zéro ? »**
+   - **De zéro** → **Parcours A** (§3).
+   - **Projet existant** (déjà en ligne, peut-être avec une URL imprimée) → **Parcours B**
+     (§3) : tu récupères son Script ID/URL et tu mets Git/GitHub + le versionnement en place
+     **autour** du projet existant, sans casser son URL publique.
+2. Déroule **toute la mise en place** du parcours choisi, jusqu'à un **projet déployé et
+   versionné sur GitHub** (squelette neuf, ou projet existant repris proprement).
+3. **Seulement alors**, pose la question fonctionnelle (§3, *Phase finale*) : « décris /
+   quelles évolutions veux-tu pour l'application ? », et itère (§4).
+
+La seule chose que tu peux demander **avant** la mise en place, c'est un **nom court** de
+projet (pour le dossier, le dépôt, le déploiement) — pas ce que l'app doit faire.
 
 ---
 
@@ -94,66 +113,106 @@ Il faut aussi un **dossier Drive** pour le projet (voir §3, étape 1).
 
 ---
 
-## 3. Démarrer un nouveau projet (bootstrap)
+## 3. Mise en place du projet (AVANT de parler des fonctionnalités)
 
-### Étape 1 — Le dossier Drive et le Sheet (côté humain, quelques clics)
+> But : arriver à un **projet déployé et versionné sur GitHub** — un squelette « bonjour »
+> tout neuf **ou** ton projet existant repris proprement — **avant** de travailler sur ce que
+> l'app doit faire. Ne passe à la *Phase finale* qu'une fois la plomberie verte.
 
-Deux cas, selon ce que FX t'a donné :
+### Phase 0 — Le projet existe-t-il déjà ?
 
-- **On t'a donné ton dossier personnel** (`<ID_DOSSIER_PERSO_DRIVE>`) → crées-y un
-  **sous-dossier** au nom du projet.
-- **Tu as déjà créé le sous-dossier du projet** → parfait.
+Pose **la** question d'abord : **« As-tu déjà un projet Apps Script, ou on part de zéro ? »**
 
-Dans ce **sous-dossier de projet**, crée un Google Sheet vide (*Nouveau → Google Sheets*),
-nomme-le, puis copie son **ID** depuis l'URL :
-`https://docs.google.com/spreadsheets/d/`**`CET_ID`**`/edit`.
+- **De zéro** → **Parcours A**.
+- **Projet déjà existant** (déjà en ligne, peut-être avec une URL imprimée) → **Parcours B**.
 
-Donne à l'IA : l'**ID du sous-dossier** et l'**ID du Sheet**.
+Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraisons`).
 
-### Étape 2 — Le repo Git (l'IA)
+---
 
-Créer le projet à partir du repo squelette (« Use this template ») :
+### Parcours A — Nouveau projet (de zéro)
 
+**A1. Dépôt GitHub** (l'IA) :
 ```bash
 gh repo create <nom-du-projet> --template <ORG_OU_FX>/appsscript-starter-kit --private --clone
 cd <nom-du-projet>
 ```
 
-### Étape 3 — Le projet Apps Script (l'IA)
+**A2. Dossier Drive + Sheet** (humain) : dans ton dossier attitré (`<ID_DOSSIER_PERSO_DRIVE>`),
+crée un **sous-dossier** au nom du projet, puis dedans un **Google Sheet** vide. Copie son
+**ID** : `https://docs.google.com/spreadsheets/d/`**`CET_ID`**`/edit`. Donne à l'IA l'**ID du
+dossier** et l'**ID du Sheet**.
 
+**A3. Brancher + déployer le squelette** (l'IA, déploiement à confirmer) :
 ```bash
 clasp create --type standalone --title "<Nom du projet>"
-```
-
-`clasp` écrit `.clasp.json` (il contient le `scriptId`, un identifiant — pas un secret —
-que l'on peut committer). Puis :
-
-- Ouvrir `Code.js` et remplacer `<ID_DU_GOOGLE_SHEET>` par l'ID du Sheet (étape 1) et
-  `<APP NAME>` par le nom du projet.
-- (Optionnel, rangement) déplacer le script dans le sous-dossier Drive du projet côté
-  Drive. Ce qui compte surtout, c'est que **le Sheet (les données)** soit dans le dossier.
-
-### Étape 4 — Premier envoi + premier (et unique) déploiement (l'IA, à confirmer)
-
-```bash
+# dans Code.js : remplacer <ID_DU_GOOGLE_SHEET> (Sheet de A2) et <APP NAME>
 clasp push
-clasp version "v1 — première version"        # affiche un numéro <num>
-clasp deploy -V <num> -d "<Nom du projet> — app web"
+clasp version "v1 — squelette"                        # → numéro <num>
+clasp deploy -V <num> -d "<Nom du projet> — app web"  # → note le DEPLOYMENT_ID (AKfyc…) = le SEUL
+clasp open-web-app
 ```
 
-`clasp deploy` affiche un **`DEPLOYMENT_ID`** (commence par `AKfyc…`). **C'est le seul
-déploiement du projet.** Reporte-le tout de suite dans `DEPLOY.md`, avec le `scriptId`,
-le Sheet ID, l'ID du dossier et l'URL. À partir de là : **plus jamais `clasp deploy`**.
+**A4. Mémo + commit** : remplis `DEPLOY.md`, puis
+`git add -A && git commit -m "chore: bootstrap projet Apps Script" && git push`.
 
-Récupère l'URL publique : `clasp open-web-app`.
+**A5. Vérifier** : l'URL `/exec` affiche le squelette et écrit une ligne test dans le Sheet ;
+le code est sur GitHub. ✅ → passe à la **Phase finale**.
 
-### Étape 5 — Premier commit Git (l'IA)
+---
 
+### Parcours B — Reprendre un projet existant
+
+**B1. Récupérer le Script ID** (humain) : ouvre le projet dans l'éditeur Apps Script →
+⚙️ *Paramètres du projet* → copie le **Script ID**. (Ou colle l'URL de l'éditeur
+`https://script.google.com/…/projects/`**`<SCRIPT_ID>`**`/edit`.)
+⚠️ **Ne confonds pas** avec l'URL `/exec` : celle-ci contient un **ID de déploiement**, pas le Script ID.
+
+**B2. Rapatrier le code** (l'IA) : si tu es parti du template, **supprime d'abord** les fichiers
+squelette (`Code.js`, `Index.html`, `appsscript.json`) — on va récupérer les vrais. Garde les
+fichiers-guides (`AGENTS.md`, `README.md`, `SECRETS.md`, `DEPLOY.md`, `.gitignore`). Puis :
 ```bash
-git add -A
-git commit -m "chore: bootstrap projet Apps Script"
-git push
+clasp clone <SCRIPT_ID>        # rapatrie le code existant + écrit .clasp.json
 ```
+
+**B3. Repérer le déploiement PUBLIÉ existant** (crucial — l'IA) :
+```bash
+clasp deployments              # liste les déploiements
+```
+Identifie celui **en service** (celui qui a une URL de web-app, pas l'entrée `@HEAD`). Si
+plusieurs, demande à l'utilisateur **quelle URL `/exec` est celle utilisée/imprimée**. Note
+son **DEPLOYMENT_ID** dans `DEPLOY.md`. ⚠️ **NE crée PAS de nouveau déploiement** : les futures
+publications se feront avec `clasp redeploy <DEPLOYMENT_ID>` (§4), pour garder l'URL intacte.
+
+**B4. Git + GitHub** (l'IA) — mettre le projet existant sous versionnement, sans toucher au code :
+```bash
+git init && git add -A
+git commit -m "chore: import du projet existant + standards GONG"
+gh repo create <nom-du-projet> --private --source=. --push
+```
+
+**B5. (Optionnel) Ranger dans un dossier Drive** — voir la note « migration » ci-dessous.
+
+**B6. Vérifier** : l'URL `/exec` **inchangée** fonctionne toujours ; le code est sur GitHub ;
+`DEPLOY.md` rempli (Script ID, **DEPLOYMENT_ID**, URL, Sheet ID). ✅ → passe à la **Phase finale**.
+
+> **Migration dans un dossier Drive — possible et sans risque.** Déplacer le Google Sheet (et
+> le fichier du script) dans un dossier **ne change ni les IDs ni l'URL `/exec`** (la position
+> Drive est indépendante). Le plus simple : l'utilisateur les **glisse** dans le dossier voulu
+> dans Drive (1 geste) ; un script *bound* (attaché au Sheet) suit automatiquement le Sheet.
+> C'est aussi automatisable via une fonction `DriveApp` one-shot, mais le glisser-déposer suffit.
+
+---
+
+### Phase finale — SEULEMENT MAINTENANT, l'application
+
+- **Nouveau projet** : « **Décris-moi l'application que tu veux créer** : à quoi elle sert, qui
+  l'utilise, quelles informations elle affiche et enregistre. »
+- **Projet existant** : « **Que veux-tu modifier ou ajouter** à l'app existante ? »
+
+Puis construis / fais évoluer de façon **incrémentale** en suivant la boucle du §4 (adapter
+`Code.js`/`Index.html`, tester sur `/dev`, `commit` + `push`, `version` + `redeploy` sur le
+**DEPLOYMENT_ID** enregistré).
 
 ---
 
