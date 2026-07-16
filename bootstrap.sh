@@ -17,6 +17,26 @@ REPO="appsscript-starter-kit"
 
 say() { printf '\n\033[1;36m> %s\033[0m\n' "$1"; }
 
+# --- Barre de progression : rassure quand une etape prend du temps ---
+# On affiche "Etape N/6" + une barre visuelle a chaque grande etape. Les etapes
+# sont fixes (meme si Node/Homebrew/l'app sont deja installes, l'etape est juste rapide),
+# pour que la progression reste previsible.
+STEP=0
+TOTAL_STEPS=6
+progress() {
+  STEP=$((STEP + 1))
+  local label="$1" width=20 i bar="" filled empty pct
+  filled=$(( STEP * width / TOTAL_STEPS ))
+  empty=$(( width - filled ))
+  for ((i = 0; i < filled; i++)); do bar="${bar}#"; done
+  for ((i = 0; i < empty;  i++)); do bar="${bar}-"; done
+  pct=$(( STEP * 100 / TOTAL_STEPS ))
+  printf '\n\033[1;36m[%s] %3d%%   Etape %d/%d : %s\033[0m\n' "$bar" "$pct" "$STEP" "$TOTAL_STEPS" "$label"
+}
+
+# Rappel rassurant avant une operation longue (Homebrew, Node, telechargement de l'app).
+patience() { printf '\033[0;36m   ... %s -- laisse tourner, c'\''est normal.\033[0m\n' "$1"; }
+
 # Installe Homebrew si absent (base pour Node, l'app Claude, gh).
 # Le tout premier install de Homebrew a besoin des droits admin (mot de passe Mac).
 # On pre-autorise sudo AVANT de lancer l'installeur : sinon, en mode non-interactif,
@@ -46,6 +66,7 @@ EOF
     exit 1
   fi
 
+  patience "l'installation de Homebrew prend generalement 2 a 5 minutes"
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
     echo "" >&2
     echo "L'installation de Homebrew a echoue. Verifie ta connexion, puis relance la commande." >&2
@@ -71,17 +92,23 @@ if [ ! -t 0 ]; then
 fi
 
 # --- 1. Quel assistant IA ? ---
+progress "Choix de l'assistant IA"
 say "Quel assistant IA veux-tu utiliser ?"
 select AI in "Claude Code" "Codex"; do [ -n "${AI:-}" ] && break; done
 
 # --- 2. Node (requis pour clasp, quel que soit l'assistant) ---
+progress "Verification de Node"
 if ! command -v node >/dev/null 2>&1; then
   ensure_brew
   say "Installation de Node..."
+  patience "environ 1 a 2 minutes"
   brew install node
+else
+  say "Node est deja installe."
 fi
 
 # --- 3. L'assistant IA choisi ---
+progress "Installation de l'assistant ($AI)"
 case "$AI" in
   "Claude Code")
     # App desktop GUI (onglet Code) = cask 'claude' -> Claude.app.
@@ -89,13 +116,23 @@ case "$AI" in
     if ! brew list --cask claude >/dev/null 2>&1; then
       ensure_brew
       say "Installation de l'app Claude (desktop)..."
+      patience "telechargement de plusieurs centaines de Mo, quelques minutes"
       brew install --cask claude
+    else
+      say "L'app Claude est deja installee."
     fi ;;
   "Codex")
-    command -v codex >/dev/null 2>&1 || { say "Installation de Codex..."; npm install -g @openai/codex; } ;;
+    if command -v codex >/dev/null 2>&1; then
+      say "Codex est deja installe."
+    else
+      say "Installation de Codex..."
+      patience "environ 1 minute"
+      npm install -g @openai/codex
+    fi ;;
 esac
 
 # --- 4. Nom du projet + dossier de travail (~/coding-projects/<nom>) ---
+progress "Nom du projet et dossier de travail"
 read -rp "$(printf '\033[1;36m> Nom court du projet (ex. suivi-livraisons) : \033[0m')" NAME
 NAME="$(printf '%s' "$NAME" | tr ' ' '-' | tr -cd '[:alnum:]-')"
 [ -n "$NAME" ] || { echo "Nom vide — on arrete." >&2; exit 1; }
@@ -104,12 +141,13 @@ DIR="$HOME/coding-projects/$NAME"
 mkdir -p "$DIR"
 
 # --- 5. Recuperer le squelette (repo public, sans historique Git) ---
-say "Telechargement du squelette..."
+progress "Telechargement du squelette"
 curl -fsSL "https://github.com/$ORG/$REPO/archive/$REF.tar.gz" | tar -xz -C "$DIR" --strip-components=1
 cd "$DIR"
 rm -f bootstrap.sh   # l'installeur du template n'a rien a faire dans le repo du projet
 
 # --- 6. Lancer l'assistant ---
+progress "Lancement de l'assistant"
 PROMPT="Lis AGENTS.md et aide-moi a demarrer mon application (nom du projet : $NAME)."
 case "$AI" in
   "Claude Code")
