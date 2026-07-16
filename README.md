@@ -71,14 +71,14 @@ Node + `clasp` (≥ 3.3), `git`, `gh` (GitHub CLI). Un compte Google Workspace
   d'install pointe sur `raw.githubusercontent.com/gongsup1/appsscript-starter-kit/main/bootstrap.sh`.
 - **Dossiers Drive** : créer un dossier attitré par collaborateur, lui donner l'accès en
   écriture, et lui transmettre l'**ID** du dossier.
-- **1Password** : ranger les clés/API (ex. Brevo) dans le coffre `<VAULT_1PASSWORD>` et
+- **1Password** : ranger les clés/API (ex. Brevo) dans le coffre `Vibe-coding` et
   donner l'accès aux personnes concernées. Les valeurs se recopient dans les Propriétés du
   script de chaque projet — jamais dans le repo.
-- **E-mail & SMS (Brevo)** : les apps envoient via **Brevo**. Créer **une** clé API Brevo
-  dédiée aux apps et la ranger dans `<VAULT_1PASSWORD>` (elle sera collée dans les Propriétés
-  du script de chaque projet — jamais dans le repo). Vérifier `notifications@gong-galaxy.com`
-  comme **expéditeur** dans Brevo et **authentifier le domaine** `gong-galaxy.com` (SPF/DKIM) ;
-  laisser **Google *et* Brevo** dans le SPF, car `notifications@` peut envoyer par les deux.
-  **Aucun** alias « Envoyer en tant que » n'est nécessaire.
-- **Reste à renseigner** : `<VAULT_1PASSWORD>` (nom du coffre 1Password) dans `AGENTS.md`,
-  `README.md` et `SECRETS.md`. (`<ORG>`=`gongsup1` et `<REF>`=`main` sont déjà faits.)
+- **E-mail & SMS (Brevo)** : les apps envoient via **un seul compte Brevo GONG**. Le **service
+  informatique** crée **une clé API Brevo par utilisateur autorisé** et la range dans `Vibe-coding`
+  (collée dans les Propriétés du script de ses projets — jamais dans le repo). Vérifier
+  `noreply@gong-galaxy.com` comme **expéditeur** dans Brevo et **authentifier le domaine**
+  `gong-galaxy.com` (SPF/DKIM) ; laisser **Google *et* Brevo** dans le SPF (le domaine envoie par
+  les deux : Google pour les humains, Brevo pour les apps). **Aucun** alias « Envoyer en tant
+  que » n'est nécessaire.
+- **Placeholders** : tous renseignés — `<ORG>`=`gongsup1`, `<REF>`=`main`, `<VAULT_1PASSWORD>`=`Vibe-coding`.

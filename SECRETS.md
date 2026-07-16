@@ -7,11 +7,11 @@ Les secrets se règlent dans les **Propriétés du script** — l'équivalent Ap
 `.env` : ils vivent **côté Google, jamais dans le dépôt**. Apps Script n'a **pas** de fichier
 `.env` ni de variables d'environnement à l'exécution ; ces propriétés **ne se posent qu'à la
 main dans l'éditeur** (ni `clasp`, ni l'API, ni l'IA ne peuvent les écrire — voir le pas-à-pas
-ci-dessous). Les **valeurs** se récupèrent dans **1Password** (coffre `<VAULT_1PASSWORD>`).
+ci-dessous). Les **valeurs** se récupèrent dans **1Password** (coffre `Vibe-coding`).
 
 | Clé (= nom de la Propriété du script) | À quoi ça sert | Où trouver la valeur | Requis ? |
 |---|---|---|---|
-| `BREVO_API_KEY` | Envoi d'**e-mails** (§8a) **et de SMS** (§8b) via Brevo | 1Password → `<VAULT_1PASSWORD>` → « Brevo — apps » (**une seule** clé, partagée par toutes les apps) | Oui si e-mail ou SMS |
+| `BREVO_API_KEY` | Envoi d'**e-mails** (§8a) **et de SMS** (§8b) via Brevo | 1Password → `Vibe-coding` → **la clé Brevo qui t'a été attribuée** (une clé **par utilisateur autorisé**, créée par le service informatique) | Oui si e-mail ou SMS |
 
 ## Régler `BREVO_API_KEY` — pas à pas (à faire une fois par app)
 
@@ -20,8 +20,9 @@ ci-dessous). Les **valeurs** se récupèrent dans **1Password** (coffre `<VAULT_
 2. En bas à gauche, clique sur ⚙️ **Paramètres du projet**.
 3. Descends jusqu'à **Propriétés du script**, puis clique **Ajouter une propriété de script**.
 4. Champ **Propriété** (le nom, à taper **exactement**) : `BREVO_API_KEY`
-5. Champ **Valeur** : ouvre **1Password** → coffre `<VAULT_1PASSWORD>` → entrée « Brevo — apps »,
-   copie la clé et **colle-la** ici. (Ne la tape pas à la main, ne la note nulle part.)
+5. Champ **Valeur** : ouvre **1Password** → coffre `Vibe-coding` → **la clé Brevo qui t'a été
+   attribuée** (créée par le service informatique). Copie-la et **colle-la** ici. (Ne la tape
+   pas à la main, ne la note nulle part.) Pas encore de clé ? Demande-la au service informatique.
 6. Clique **Enregistrer les propriétés du script**. Terminé : l'app lira la clé toute seule
    via `PropertiesService`, sans que la valeur touche jamais le dépôt.
 
@@ -29,9 +30,9 @@ ci-dessous). Les **valeurs** se récupèrent dans **1Password** (coffre `<VAULT_
 > réseau (`UrlFetchApp`) : exécute `testEmail` (ou `sendSms_`) dans l'éditeur et **accepte**
 > l'autorisation **avant** de redéployer (règle d'or n°9).
 
-## Envoyer depuis `notifications@gong-galaxy.com`
+## Envoyer depuis `noreply@gong-galaxy.com`
 
-`notifications@gong-galaxy.com` est un **compte Google Workspace à part entière**. L'envoi
+`noreply@gong-galaxy.com` est un **compte Google Workspace à part entière**. L'envoi
 passe par **Brevo** — **pas** par un alias Google : il suffit que cette adresse soit un
 **expéditeur vérifié** dans Brevo et que le domaine `gong-galaxy.com` soit authentifié
 (SPF/DKIM). C'est un réglage **côté Brevo/DNS**, fait une fois par un admin (voir `AGENTS.md`

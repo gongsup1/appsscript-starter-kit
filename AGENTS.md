@@ -29,10 +29,10 @@ En permanence :
   recopier des commandes à la main que si c'est explicitement demandé.
 - **Demande confirmation AVANT toute action irréversible côté Google/GitHub** : premier
   déploiement, suppression d'un fichier/onglet Drive, envoi d'un **vrai** SMS/e-mail à
-  des destinataires réels (teste d'abord sur toi-même), création d'un dépôt public.
+  des destinataires réels (teste d'abord sur toi-même). Un dépôt public est **interdit** (règle 10).
 - Si quelque chose sort du périmètre (nouveau scope sensible, changement d'URL publique,
   doute sur un secret) → **arrête-toi et renvoie vers FX** (§11).
-- **Respecte les 9 règles d'or ci-dessous sans exception.**
+- **Respecte les 10 règles d'or ci-dessous sans exception.**
 
 ### ⚠️ Ordre impératif au démarrage
 
@@ -54,10 +54,10 @@ projet (pour le dossier, le dépôt, le déploiement) — pas ce que l'app doit 
 
 ---
 
-## 1. Les 9 règles d'or (non négociables)
+## 1. Les 10 règles d'or (non négociables)
 
 1. **Secrets → jamais dans le code ni dans Git.** Clés API, mots de passe vivent dans les
-   **Propriétés du script** (valeurs prises dans **1Password**, coffre `<VAULT_1PASSWORD>`).
+   **Propriétés du script** (valeurs prises dans **1Password**, coffre `Vibe-coding`).
    Voir `SECRETS.md` et §7. *Une clé committée reste dans l'historique Git pour toujours,
    et se fait révoquer automatiquement → panne silencieuse.*
 2. **Toujours redéployer LE MÊME déploiement.** L'URL publique `/exec` peut être imprimée
@@ -80,6 +80,12 @@ projet (pour le dossier, le dépôt, le déploiement) — pas ce que l'app doit 
    `MailApp`/`GmailApp`/`UrlFetchApp`/`DriveApp`… ajoute une permission : **exécuter une
    fonction de test dans l'éditeur et accepter l'autorisation** *avant* le `redeploy`,
    sinon `/exec` tombe en erreur pour **tout le monde**.
+10. **Repos de projet TOUJOURS privés — JAMAIS de dépôt public.** Tout `gh repo create` se fait
+    avec `--private` dans l'org `gongsup1` ; après création, **vérifie** que la visibilité est
+    bien `private` (`gh repo view gongsup1/<projet> --json visibility`). Ne crée **jamais** un
+    repo public, ne bascule **jamais** un repo en public (le code porte des références internes :
+    IDs de Sheet, logique métier, listes de personnes). Le **seul** dépôt public est le template
+    `gongsup1/appsscript-starter-kit`, que tu ne crées pas. Au moindre doute → privé + FX (§11).
 
 Bonus : `access: DOMAIN` dans `appsscript.json` réserve l'app au domaine `@gong-galaxy.com`.
 Ne passe jamais en `ANYONE` sans validation de FX.
@@ -309,7 +315,7 @@ rame, c'est presque toujours **trop d'appels au Sheet**. Règles, déjà appliqu
 1. Éditeur Apps Script (`clasp open-script`) → ⚙️ **Paramètres du projet** →
    **Propriétés du script** → *Ajouter une propriété*.
 2. **Clé** = le nom utilisé dans le code (ex. `BREVO_API_KEY`). **Valeur** = prise dans
-   **1Password** (coffre `<VAULT_1PASSWORD>`). Voir `SECRETS.md`.
+   **1Password** (coffre `Vibe-coding`). Voir `SECRETS.md`.
 3. Dans le code, lire ainsi (jamais la valeur en dur) :
    ```js
    const KEY = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || '';
@@ -330,19 +336,19 @@ rame, c'est presque toujours **trop d'appels au Sheet**. Règles, déjà appliqu
 > N'ajoute que ce dont tu as besoin. Chaque recette introduit un **nouveau scope OAuth** →
 > applique la **règle n°9** (tester dans l'éditeur + accepter l'autorisation) **avant** de redéployer.
 
-### 8.a — Envoyer un e-mail (Brevo, expéditeur `notifications@gong-galaxy.com`)
+### 8.a — Envoyer un e-mail (Brevo, expéditeur `noreply@gong-galaxy.com`)
 
 ```js
 /* ============ RECIPE: EMAIL (Brevo transactional) ============ */
 // Same provider and key as the SMS recipe (§8.b): the Brevo API key lives in Script
 // Properties (BREVO_API_KEY), value copied ONCE from 1Password (see SECRETS.md). Brevo
-// sends the mail AS notifications@gong-galaxy.com — a verified sender in Brevo, with the
+// sends the mail AS noreply@gong-galaxy.com — a verified sender in Brevo, with the
 // gong-galaxy.com domain authenticated (SPF/DKIM). No Google "Send as" alias is involved,
 // and no SMTP password ever lives in an app.
 // NEVER hard-code the key: a committed key gets auto-revoked → silent mail outage.
 const BREVO_API_KEY  = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || '';
 const BREVO_MAIL_URL = 'https://api.brevo.com/v3/smtp/email';
-const MAIL_FROM      = { email: 'notifications@gong-galaxy.com', name: 'GONG' };
+const MAIL_FROM      = { email: 'noreply@gong-galaxy.com', name: 'GONG' };
 
 // Send one e-mail. Returns true on success. Pass htmlContent, OR switch to a Brevo template
 // (templateId + params) so a non-dev can edit the wording/design in Brevo WITHOUT a redeploy.
@@ -371,10 +377,10 @@ function testEmail() {
 }
 ```
 
-> **Réglage unique (admin, voir §11) :** dans Brevo, vérifier `notifications@gong-galaxy.com`
-> comme **expéditeur** et **authentifier le domaine** `gong-galaxy.com` (SPF/DKIM). Comme
-> `notifications@` peut envoyer **aussi** par un autre canal, laisser **Google _et_ Brevo**
-> dans le SPF du domaine. Tant que ce réglage n'est pas fait, les mails risquent le spam.
+> **Réglage unique (admin, voir §11) :** dans Brevo, vérifier `noreply@gong-galaxy.com`
+> comme **expéditeur** et **authentifier le domaine** `gong-galaxy.com` (SPF/DKIM). Le domaine
+> envoie par **deux canaux** (Google pour les humains, Brevo pour les apps) → laisser **Google
+> _et_ Brevo** dans le SPF du domaine. Tant que ce réglage n'est pas fait, les mails risquent le spam.
 
 ### 8.b — Alerte SMS (Brevo) — pack complet (envoi + contrôle quotidien + repli e-mail)
 
@@ -467,7 +473,7 @@ Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 
 - **créer ou supprimer un déploiement** (au-delà du tout premier), ou tout changement
   susceptible de **modifier l'URL publique** ;
-- **e-mail Brevo** : `notifications@gong-galaxy.com` à vérifier comme **expéditeur**, ou
+- **e-mail Brevo** : `noreply@gong-galaxy.com` à vérifier comme **expéditeur**, ou
   domaine `gong-galaxy.com` à authentifier (SPF/DKIM) dans Brevo — accès admin/DNS ;
 - **valeur de secret** à obtenir/renouveler (1Password), ou **secret potentiellement fuité** ;
 - passage envisagé en `access: ANYONE` (app ouverte hors domaine) ;
@@ -480,7 +486,7 @@ NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) 
   Placeholders du template :
     <ORG>=gongsup1     ✓ renseigné (org GitHub, owner dev@gong-galaxy.com)
     <REF>=main         ✓ renseigné (branche/tag servant bootstrap.sh)
-    <VAULT_1PASSWORD>  → RESTE à renseigner (coffre 1Password des secrets, clé Brevo partagée)
+    <VAULT_1PASSWORD>=Vibe-coding  ✓ renseigné (coffre 1Password ; clé Brevo par utilisateur autorisé, créée par le service info)
   Renseignés par le collaborateur au bootstrap :
     <TON_PRÉNOM>, <ID_DOSSIER_PERSO_DRIVE>, <ID_DU_SOUS_DOSSIER_DRIVE>,
     <ID_DU_GOOGLE_SHEET>, <SCRIPT_ID>, <DEPLOYMENT_ID>, <URL_EXEC>, <URL_DU_REPO_GITHUB>
@@ -488,5 +494,5 @@ NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) 
     - créer l'org GitHub (owner dev@), publier gongsup1/appsscript-starter-kit en PUBLIC,
       le marquer "Template repository", autoriser les membres à créer des repos privés,
       inviter les collaborateurs comme membres ;
-    - Brevo : vérifier l'expéditeur notifications@ + SPF/DKIM du domaine (Google ET Brevo).
+    - Brevo : vérifier l'expéditeur noreply@ + SPF/DKIM du domaine (Google ET Brevo).
 -->
