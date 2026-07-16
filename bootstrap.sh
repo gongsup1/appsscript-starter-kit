@@ -18,13 +18,50 @@ REPO="appsscript-starter-kit"
 say() { printf '\n\033[1;36m> %s\033[0m\n' "$1"; }
 
 # Installe Homebrew si absent (base pour Node, l'app Claude, gh).
+# Le tout premier install de Homebrew a besoin des droits admin (mot de passe Mac).
+# On pre-autorise sudo AVANT de lancer l'installeur : sinon, en mode non-interactif,
+# Homebrew teste "sudo -n" (sans jamais demander le mot de passe), le test echoue et
+# l'installeur s'arrete sur "Need sudo access on macOS" -- meme pour un vrai admin.
 ensure_brew() {
-  command -v brew >/dev/null 2>&1 && return
-  say "Installation de Homebrew (mot de passe Mac probablement demande)..."
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  command -v brew >/dev/null 2>&1 && return 0
+
+  say "Installation de Homebrew (l'outil qui pose Node et l'app)."
+  cat <<'EOF'
+  macOS va te demander TON mot de passe Mac (celui de ta session).
+  C'est normal et attendu : c'est pour installer Homebrew.
+
+  IMPORTANT : le mot de passe se tape A L'AVEUGLE dans le Terminal.
+  Rien ne s'affiche pendant la frappe -- ni points, ni etoiles, et le curseur ne bouge pas.
+  C'est voulu (securite). Tape ton mot de passe normalement, puis Entree.
+  (Sur certains Mac, c'est Touch ID a la place du mot de passe.)
+
+EOF
+
+  # Pre-autorise sudo. Si l'utilisateur n'est pas administrateur, ceci echoue proprement.
+  if ! sudo -v; then
+    echo "" >&2
+    echo "Impossible d'obtenir les droits administrateur (sudo)." >&2
+    echo "Homebrew ne peut pas s'installer sans un compte admin du Mac." >&2
+    echo "-> Lance ce bootstrap depuis un compte administrateur, ou demande a l'IT / a FX." >&2
+    exit 1
+  fi
+
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
+    echo "" >&2
+    echo "L'installation de Homebrew a echoue. Verifie ta connexion, puis relance la commande." >&2
+    exit 1
+  }
+
   for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
     [ -x "$b" ] && { eval "$("$b" shellenv)"; break; }
   done
+
+  command -v brew >/dev/null 2>&1 || {
+    echo "" >&2
+    echo "Homebrew est installe mais pas encore visible dans ce Terminal." >&2
+    echo "-> Ferme puis rouvre le Terminal et relance la meme commande." >&2
+    exit 1
+  }
 }
 
 # --- Garde-fou : il faut un vrai terminal pour les questions ---
