@@ -109,6 +109,11 @@ gh auth login      # GitHub.com → HTTPS → "Login with a web browser" (aucune
 > **e-mail @gong-galaxy.com** (l'IA ne peut pas le faire à sa place — il y a une
 > vérification anti-robot). Une fois le compte créé, revenir à `gh auth login`.
 
+> **Membre de l'org.** Les projets sont créés **dans l'organisation GitHub `gongsup1`** (owner
+> `dev@gong-galaxy.com`), **pas** dans le compte perso — ainsi GONG possède et peut auditer
+> tous les repos. FX **invite** le collaborateur comme **membre** de l'org (une fois). Tant
+> que l'invitation n'est pas acceptée, `gh repo create gongsup1/…` échouera → l'accepter d'abord.
+
 Il faut aussi un **dossier Drive** pour le projet (voir §3, étape 1).
 
 ---
@@ -132,16 +137,33 @@ Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 
 ### Parcours A — Nouveau projet (de zéro)
 
-**A1. Dépôt GitHub** (l'IA) :
-```bash
-gh repo create <nom-du-projet> --template <ORG_OU_FX>/appsscript-starter-kit --private --clone
-cd <nom-du-projet>
-```
+**A1. Dépôt GitHub dans l'org** (l'IA) — selon comment tu es arrivé :
 
-**A2. Dossier Drive + Sheet** (humain) : dans ton dossier attitré (`<ID_DOSSIER_PERSO_DRIVE>`),
-crée un **sous-dossier** au nom du projet, puis dedans un **Google Sheet** vide. Copie son
-**ID** : `https://docs.google.com/spreadsheets/d/`**`CET_ID`**`/edit`. Donne à l'IA l'**ID du
-dossier** et l'**ID du Sheet**.
+- **Tu es passé par la commande d'install (ou un ZIP)** → les fichiers du squelette sont
+  **déjà dans ton dossier local**. On crée le repo dans l'org **à partir de ces fichiers** :
+  ```bash
+  git init && git add -A && git commit -m "chore: squelette initial"
+  gh repo create gongsup1/<nom-du-projet> --private --source=. --push
+  ```
+- **Terminal nu, sans les fichiers** → on instancie le template directement :
+  ```bash
+  gh repo create gongsup1/<nom-du-projet> --template gongsup1/appsscript-starter-kit --private --clone
+  cd <nom-du-projet>
+  ```
+
+> Le repo du projet est **privé** et **dans l'org** ; seul le template
+> `gongsup1/appsscript-starter-kit` est public.
+
+**A2. Dossier Drive + Sheet** (humain) : ouvre le **dossier qui t'a été attribué** pour tes
+projets — **FX t'en a partagé le lien** (c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un
+**sous-dossier** au nom du projet, puis **à l'intérieur** un **Google Sheet** vide. Copie l'**ID
+du Sheet** depuis son URL : `https://docs.google.com/spreadsheets/d/`**`CET_ID`**`/edit`, et
+donne-le à l'IA (avec l'**ID du dossier**).
+
+> Le Sheet **doit** vivre dans ton dossier attitré : c'est là que FX peut le retrouver et
+> l'auditer. L'IA **ne peut pas** créer ce dossier/Sheet à ta place — écrire dans Drive
+> exige une autorisation Google qu'elle n'a pas (comme pour les secrets). Ces 2-3 clics
+> restent le geste humain ; l'IA fait tout le reste.
 
 **A3. Brancher + déployer le squelette** (l'IA, déploiement à confirmer) :
 ```bash
@@ -170,7 +192,7 @@ le code est sur GitHub. ✅ → passe à la **Phase finale**.
 
 **B2. Rapatrier le code** (l'IA) : si tu es parti du template, **supprime d'abord** les fichiers
 squelette (`Code.js`, `Index.html`, `appsscript.json`) — on va récupérer les vrais. Garde les
-fichiers-guides (`AGENTS.md`, `README.md`, `SECRETS.md`, `DEPLOY.md`, `.gitignore`). Puis :
+fichiers-guides (`AGENTS.md`, `CLAUDE.md`, `README.md`, `SECRETS.md`, `DEPLOY.md`, `.gitignore`). Puis :
 ```bash
 clasp clone <SCRIPT_ID>        # rapatrie le code existant + écrit .clasp.json
 ```
@@ -188,7 +210,7 @@ publications se feront avec `clasp redeploy <DEPLOYMENT_ID>` (§4), pour garder 
 ```bash
 git init && git add -A
 git commit -m "chore: import du projet existant + standards GONG"
-gh repo create <nom-du-projet> --private --source=. --push
+gh repo create gongsup1/<nom-du-projet> --private --source=. --push
 ```
 
 **B5. (Optionnel) Ranger dans un dossier Drive** — voir la note « migration » ci-dessous.
@@ -250,6 +272,7 @@ Le squelette est déjà en place — adapte-le, ne repars pas de zéro :
 | Fichier | Rôle |
 |---|---|
 | `AGENTS.md` | Ce guide. |
+| `CLAUDE.md` | Une ligne `@AGENTS.md` : Claude Code ne lit que `CLAUDE.md`, cette ligne lui fait charger ce guide. Source unique (Codex lit `AGENTS.md` directement). |
 | `appsscript.json` | Manifeste : fuseau Europe/Paris, web-app `executeAs USER_DEPLOYING`, `access DOMAIN`. |
 | `Code.js` | Backend : `doGet` sert l'app, lecture/écriture du Sheet **par lots + cache + verrou**, onglets auto-créés. À adapter (`TABS`, `getData`, `saveEntry`). |
 | `Index.html` | Front mono-page : appelle le backend via `google.script.run`, `JSON.parse` des réponses. |
@@ -294,6 +317,12 @@ rame, c'est presque toujours **trop d'appels au Sheet**. Règles, déjà appliqu
 4. **Jamais** de valeur de secret dans un fichier suivi par Git, un message, un README.
    Si un secret a fuité → **préviens FX immédiatement** (révocation + régénération).
 
+> **Ces propriétés se posent UNIQUEMENT à la main, dans l'éditeur.** Ni `clasp`, ni l'API
+> Apps Script, ni toi (l'IA) ne pouvez les écrire : Apps Script n'a **pas** de `.env` ni de
+> variables d'environnement à l'exécution — les **Propriétés du script _sont_ son `.env`**,
+> côté Google, hors du dépôt. Tu prépares tout le reste ; **coller la valeur reste le seul
+> geste humain.** Guide l'utilisateur **pas à pas** (mode d'emploi détaillé dans `SECRETS.md`).
+
 ---
 
 ## 8. Recettes optionnelles
@@ -301,32 +330,51 @@ rame, c'est presque toujours **trop d'appels au Sheet**. Règles, déjà appliqu
 > N'ajoute que ce dont tu as besoin. Chaque recette introduit un **nouveau scope OAuth** →
 > applique la **règle n°9** (tester dans l'éditeur + accepter l'autorisation) **avant** de redéployer.
 
-### 8.a — Envoyer un e-mail (`notifications@gong-galaxy.com`)
+### 8.a — Envoyer un e-mail (Brevo, expéditeur `notifications@gong-galaxy.com`)
 
 ```js
-/* ============ RECIPE: EMAIL NOTIFICATION ============ */
-// In Workspace, e-mail is sent AS the account running the script (the deployer). To send
-// from the shared address notifications@gong-galaxy.com, that address must be set up as a
-// "Send mail as" alias / delegation on the running account (one-time Workspace admin task
-// by FX). With the alias in place, use the {from: ...} option; without it, drop {from} and
-// mail goes out from the deployer's own address.
-const NOTIF_FROM = 'notifications@gong-galaxy.com';
-const NOTIF_TO   = 'fxd@gong-galaxy.com'; // or read recipients from a Sheet tab
+/* ============ RECIPE: EMAIL (Brevo transactional) ============ */
+// Same provider and key as the SMS recipe (§8.b): the Brevo API key lives in Script
+// Properties (BREVO_API_KEY), value copied ONCE from 1Password (see SECRETS.md). Brevo
+// sends the mail AS notifications@gong-galaxy.com — a verified sender in Brevo, with the
+// gong-galaxy.com domain authenticated (SPF/DKIM). No Google "Send as" alias is involved,
+// and no SMTP password ever lives in an app.
+// NEVER hard-code the key: a committed key gets auto-revoked → silent mail outage.
+const BREVO_API_KEY  = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || '';
+const BREVO_MAIL_URL = 'https://api.brevo.com/v3/smtp/email';
+const MAIL_FROM      = { email: 'notifications@gong-galaxy.com', name: 'GONG' };
 
-function sendNotification_(subject, body) {
-  GmailApp.sendEmail(NOTIF_TO, subject, body, { from: NOTIF_FROM, name: 'GONG' });
+// Send one e-mail. Returns true on success. Pass htmlContent, OR switch to a Brevo template
+// (templateId + params) so a non-dev can edit the wording/design in Brevo WITHOUT a redeploy.
+function sendEmail_(to, subject, htmlContent) {
+  if (!BREVO_API_KEY) return false;
+  var res = UrlFetchApp.fetch(BREVO_MAIL_URL, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { 'api-key': BREVO_API_KEY },
+    muteHttpExceptions: true,
+    payload: JSON.stringify({
+      sender: MAIL_FROM,
+      to: [{ email: to }],
+      subject: subject,
+      htmlContent: htmlContent
+      // Template instead of htmlContent (edited in Brevo, no redeploy):
+      // templateId: 3, params: { name: 'X' }
+    })
+  });
+  return res.getResponseCode() < 300;
 }
 
-// Run once from the editor to grant the Gmail permission, then check the inbox.
+// Run once from the editor to grant the network permission (UrlFetch), then check the inbox.
 function testEmail() {
-  sendNotification_('Test GONG', 'Ceci est un test.');
+  sendEmail_('fxd@gong-galaxy.com', 'Test GONG', '<p>Ceci est un test.</p>');
 }
 ```
 
-> Si l'alias `notifications@` n'est pas encore configuré : utilise
-> `MailApp.sendEmail(NOTIF_TO, subject, body)` (scope plus léger, expéditeur = le
-> déployeur), et demande à FX de mettre en place l'alias si l'expéditeur `notifications@`
-> est requis.
+> **Réglage unique (admin, voir §11) :** dans Brevo, vérifier `notifications@gong-galaxy.com`
+> comme **expéditeur** et **authentifier le domaine** `gong-galaxy.com` (SPF/DKIM). Comme
+> `notifications@` peut envoyer **aussi** par un autre canal, laisser **Google _et_ Brevo**
+> dans le SPF du domaine. Tant que ce réglage n'est pas fait, les mails risquent le spam.
 
 ### 8.b — Alerte SMS (Brevo) — pack complet (envoi + contrôle quotidien + repli e-mail)
 
@@ -419,7 +467,8 @@ Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 
 - **créer ou supprimer un déploiement** (au-delà du tout premier), ou tout changement
   susceptible de **modifier l'URL publique** ;
-- **alias d'envoi** `notifications@gong-galaxy.com` à mettre en place (admin Workspace) ;
+- **e-mail Brevo** : `notifications@gong-galaxy.com` à vérifier comme **expéditeur**, ou
+  domaine `gong-galaxy.com` à authentifier (SPF/DKIM) dans Brevo — accès admin/DNS ;
 - **valeur de secret** à obtenir/renouveler (1Password), ou **secret potentiellement fuité** ;
 - passage envisagé en `access: ANYONE` (app ouverte hors domaine) ;
 - doute sur quoi que ce soit d'**irréversible** côté Google ou GitHub.
@@ -428,13 +477,16 @@ Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 
 <!--
 NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) :
-  À renseigner avant de publier le repo squelette :
-    <ORG_OU_FX>/appsscript-starter-kit  → emplacement du repo template sur GitHub
-    <VAULT_1PASSWORD>                    → coffre 1Password des secrets
+  Placeholders du template :
+    <ORG>=gongsup1     ✓ renseigné (org GitHub, owner dev@gong-galaxy.com)
+    <REF>=main         ✓ renseigné (branche/tag servant bootstrap.sh)
+    <VAULT_1PASSWORD>  → RESTE à renseigner (coffre 1Password des secrets, clé Brevo partagée)
   Renseignés par le collaborateur au bootstrap :
     <TON_PRÉNOM>, <ID_DOSSIER_PERSO_DRIVE>, <ID_DU_SOUS_DOSSIER_DRIVE>,
     <ID_DU_GOOGLE_SHEET>, <SCRIPT_ID>, <DEPLOYMENT_ID>, <URL_EXEC>, <URL_DU_REPO_GITHUB>
-  À confirmer : orthographe exacte de l'adresse (notification@ vs notifications@).
-  Côté FX, une fois : marquer le repo GitHub comme "Template repository" (Settings →
-  Template repository) pour que "Use this template" / gh --template fonctionne.
+  Côté FX, une fois :
+    - créer l'org GitHub (owner dev@), publier gongsup1/appsscript-starter-kit en PUBLIC,
+      le marquer "Template repository", autoriser les membres à créer des repos privés,
+      inviter les collaborateurs comme membres ;
+    - Brevo : vérifier l'expéditeur notifications@ + SPF/DKIM du domaine (Google ET Brevo).
 -->

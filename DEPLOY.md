@@ -16,6 +16,10 @@
 | URL publique `/exec` (ne change jamais) | `<URL_EXEC>` |
 | Repo GitHub | `<URL_DU_REPO_GITHUB>` |
 
+> 🔑 La **clé Brevo** (`BREVO_API_KEY`) n'est **pas** un identifiant à noter ici : c'est un
+> **secret**. Elle vit dans les **Propriétés du script** (valeur depuis 1Password), jamais
+> dans ce fichier. Mode d'emploi : `SECRETS.md`.
+
 ## Publier une modification
 
 Toujours ces étapes, dans cet ordre (voir `AGENTS.md` §4) :

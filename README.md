@@ -7,26 +7,41 @@ collaborateurs **non-développeurs**.
 
 ## Comment ça marche
 
-1. On part d'une **copie** de ce repo (bouton **« Use this template »** sur GitHub, ou
-   `gh repo create <projet> --template <ORG_OU_FX>/appsscript-starter-kit --private --clone`).
-2. On ouvre le dossier avec **Claude Code** (ou Codex/Cursor…) et on écrit :
-   > « Lis `AGENTS.md` et aide-moi à démarrer mon application. »
-3. L'IA suit **`AGENTS.md`** et déroule tout : connexions, création du projet Apps Script,
-   branchement du Google Sheet, déploiement, puis itérations.
+**En une commande** (Mac) — installe l'assistant IA, récupère le squelette et le lance :
 
-**Le point d'entrée, c'est [`AGENTS.md`](./AGENTS.md).** Tout est là.
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/gongsup1/appsscript-starter-kit/main/bootstrap.sh)"
+```
+
+Le script demande **quel assistant IA** (Claude Code ou Codex) et le **nom du projet**, crée le
+dossier `~/coding-projects/<nom>`, y récupère le squelette, puis **ouvre l'assistant dessus**.
+Pour **Claude Code, l'app desktop** s'ouvre directement sur le projet avec la phrase de départ
+**déjà pré-remplie** — il ne reste qu'à appuyer sur **Entrée** :
+
+> « Lis `AGENTS.md` et aide-moi à démarrer mon application. »
+
+L'assistant suit **`AGENTS.md`** (chargé automatiquement — voir `CLAUDE.md`) et déroule tout :
+connexions, création du repo **dans l'org** (privé), projet Apps Script, branchement du Google
+Sheet, déploiement, puis itérations.
+
+> **Sans la commande** (terminal déjà équipé) : `gh repo create gongsup1/<projet> --template
+> gongsup1/appsscript-starter-kit --private --clone`, ouvrir le dossier avec l'IA, même phrase.
+
+**Le point d'entrée du travail de l'IA, c'est [`AGENTS.md`](./AGENTS.md).**
 
 ## Contenu
 
 | Fichier | Rôle |
 |---|---|
 | [`AGENTS.md`](./AGENTS.md) | Le guide que suit l'IA (règles d'or, bootstrap, boucle d'itération, performance, recettes). |
+| [`CLAUDE.md`](./CLAUDE.md) | Une ligne (`@AGENTS.md`) : fait lire `AGENTS.md` à **Claude Code**, qui ne lit que `CLAUDE.md`. Source unique, partagée avec Codex. |
 | `appsscript.json` | Manifeste Apps Script (fuseau Paris, web-app, accès domaine). |
 | `Code.js` | Squelette back-end : sert l'app, lit/écrit le Sheet **par lots + cache + verrou**. |
 | `Index.html` | Squelette front mono-page. |
 | `SECRETS.md` | Quels secrets régler, et **où** trouver leurs valeurs (jamais dans le repo). |
 | `DEPLOY.md` | Mémo de déploiement par projet (IDs + commande de publication). |
 | `.gitignore` | Exclut jetons et tout fichier de secret. |
+| `bootstrap.sh` | Commande d'install « une ligne » (Mac) : choisit l'assistant, installe Node + l'app (**Claude Code desktop** en cask, ou **Codex** CLI), récupère le squelette, ouvre l'assistant sur le projet. |
 
 ## Principes (résumé)
 
@@ -40,22 +55,30 @@ collaborateurs **non-développeurs**.
 ## Prérequis
 
 Node + `clasp` (≥ 3.3), `git`, `gh` (GitHub CLI). Un compte Google Workspace
-`@gong-galaxy.com` et un compte GitHub. Détails et commandes dans `AGENTS.md` §2.
+`@gong-galaxy.com` et un compte GitHub **membre de l'org GONG**. Détails et commandes dans
+`AGENTS.md` §2.
 
 ---
 
 ## Mise en place (pour FX, une seule fois)
 
-- **Publier ce repo** sous `<ORG_OU_FX>` et le marquer **« Template repository »**
-  (GitHub → *Settings* → cocher *Template repository*), pour que « Use this template » /
-  `gh --template` fonctionne.
+- **Organisation GitHub** : créer l'org (owner `dev@gong-galaxy.com`). Y publier ce repo
+  **`gongsup1/appsscript-starter-kit` en PUBLIC** (le `bootstrap.sh` est servi par son URL brute)
+  et le marquer **« Template repository »** (*Settings* → cocher). Autoriser les membres à
+  **créer des repos privés** dans l'org, puis **inviter** les collaborateurs comme membres :
+  leurs projets naîtront **dans l'org**, privés, possédés et auditables par GONG.
+- **`bootstrap.sh`** : `<ORG>`/`<REF>` déjà renseignés (**`gongsup1`** / **`main`**). La commande
+  d'install pointe sur `raw.githubusercontent.com/gongsup1/appsscript-starter-kit/main/bootstrap.sh`.
 - **Dossiers Drive** : créer un dossier attitré par collaborateur, lui donner l'accès en
   écriture, et lui transmettre l'**ID** du dossier.
 - **1Password** : ranger les clés/API (ex. Brevo) dans le coffre `<VAULT_1PASSWORD>` et
   donner l'accès aux personnes concernées. Les valeurs se recopient dans les Propriétés du
   script de chaque projet — jamais dans le repo.
-- **Alias e-mail** : si les apps doivent envoyer depuis `notifications@gong-galaxy.com`,
-  configurer l'alias « Envoyer en tant que » / la délégation côté Workspace (voir
-  `AGENTS.md` §8a).
-- Renseigner les valeurs `<ORG_OU_FX>` et `<VAULT_1PASSWORD>` dans `AGENTS.md`, `README.md`
-  et `SECRETS.md` avant diffusion.
+- **E-mail & SMS (Brevo)** : les apps envoient via **Brevo**. Créer **une** clé API Brevo
+  dédiée aux apps et la ranger dans `<VAULT_1PASSWORD>` (elle sera collée dans les Propriétés
+  du script de chaque projet — jamais dans le repo). Vérifier `notifications@gong-galaxy.com`
+  comme **expéditeur** dans Brevo et **authentifier le domaine** `gong-galaxy.com` (SPF/DKIM) ;
+  laisser **Google *et* Brevo** dans le SPF, car `notifications@` peut envoyer par les deux.
+  **Aucun** alias « Envoyer en tant que » n'est nécessaire.
+- **Reste à renseigner** : `<VAULT_1PASSWORD>` (nom du coffre 1Password) dans `AGENTS.md`,
+  `README.md` et `SECRETS.md`. (`<ORG>`=`gongsup1` et `<REF>`=`main` sont déjà faits.)

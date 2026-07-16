@@ -3,21 +3,39 @@
 > ⚠️ **Aucune valeur de secret ne va dans ce fichier ni nulle part dans le repo.**
 > Ce fichier ne fait que **lister** les secrets à régler et **où trouver leur valeur**.
 
-Les secrets se règlent dans les **Propriétés du script** :
-éditeur Apps Script (`clasp open-script`) → ⚙️ **Paramètres du projet** →
-**Propriétés du script** → *Ajouter une propriété*.
-Les **valeurs** se récupèrent dans **1Password** (coffre `<VAULT_1PASSWORD>`).
+Les secrets se règlent dans les **Propriétés du script** — l'équivalent Apps Script d'un
+`.env` : ils vivent **côté Google, jamais dans le dépôt**. Apps Script n'a **pas** de fichier
+`.env` ni de variables d'environnement à l'exécution ; ces propriétés **ne se posent qu'à la
+main dans l'éditeur** (ni `clasp`, ni l'API, ni l'IA ne peuvent les écrire — voir le pas-à-pas
+ci-dessous). Les **valeurs** se récupèrent dans **1Password** (coffre `<VAULT_1PASSWORD>`).
 
 | Clé (= nom de la Propriété du script) | À quoi ça sert | Où trouver la valeur | Requis ? |
 |---|---|---|---|
-| `BREVO_API_KEY` | Envoi de SMS via Brevo (recette §8b d'`AGENTS.md`) | 1Password → `<VAULT_1PASSWORD>` → « Brevo API » | Seulement si SMS |
+| `BREVO_API_KEY` | Envoi d'**e-mails** (§8a) **et de SMS** (§8b) via Brevo | 1Password → `<VAULT_1PASSWORD>` → « Brevo — apps » (**une seule** clé, partagée par toutes les apps) | Oui si e-mail ou SMS |
 
-## Envoi d'e-mail depuis `notifications@gong-galaxy.com`
+## Régler `BREVO_API_KEY` — pas à pas (à faire une fois par app)
 
-**Pas de mot de passe ici.** Apps Script envoie via l'identité du compte qui exécute
-(`MailApp` / `GmailApp`). Pour que l'expéditeur affiché soit `notifications@`, cette
-adresse doit être configurée comme **alias « Envoyer en tant que » / délégation** côté
-Google Workspace (tâche admin unique de FX). Voir `AGENTS.md` §8a.
+1. Ouvre l'éditeur du projet : l'IA lance `clasp open-script` (ou va sur
+   <https://script.google.com> et ouvre le projet).
+2. En bas à gauche, clique sur ⚙️ **Paramètres du projet**.
+3. Descends jusqu'à **Propriétés du script**, puis clique **Ajouter une propriété de script**.
+4. Champ **Propriété** (le nom, à taper **exactement**) : `BREVO_API_KEY`
+5. Champ **Valeur** : ouvre **1Password** → coffre `<VAULT_1PASSWORD>` → entrée « Brevo — apps »,
+   copie la clé et **colle-la** ici. (Ne la tape pas à la main, ne la note nulle part.)
+6. Clique **Enregistrer les propriétés du script**. Terminé : l'app lira la clé toute seule
+   via `PropertiesService`, sans que la valeur touche jamais le dépôt.
+
+> La **première** fois que l'app appelle Brevo, Apps Script demande l'autorisation d'accès
+> réseau (`UrlFetchApp`) : exécute `testEmail` (ou `sendSms_`) dans l'éditeur et **accepte**
+> l'autorisation **avant** de redéployer (règle d'or n°9).
+
+## Envoyer depuis `notifications@gong-galaxy.com`
+
+`notifications@gong-galaxy.com` est un **compte Google Workspace à part entière**. L'envoi
+passe par **Brevo** — **pas** par un alias Google : il suffit que cette adresse soit un
+**expéditeur vérifié** dans Brevo et que le domaine `gong-galaxy.com` soit authentifié
+(SPF/DKIM). C'est un réglage **côté Brevo/DNS**, fait une fois par un admin (voir `AGENTS.md`
+§11). **Aucune** configuration d'alias « Envoyer en tant que » n'est nécessaire.
 
 ## En cas de fuite
 
