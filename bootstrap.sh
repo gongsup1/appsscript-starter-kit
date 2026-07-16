@@ -11,6 +11,18 @@
 
 set -euo pipefail
 
+# Mode NON-interactif pour Homebrew : sans ca, comme le script garde un vrai terminal
+# (pour les questions), brew se croit interactif et demande "Do you want to proceed? [y/n]".
+# Ces variables le font enchainer sans confirmation, et evitent un auto-update long au milieu.
+# (Le mot de passe Mac de 'sudo -v' reste demande : sudo n'est pas concerne par ces variables.)
+export NONINTERACTIVE=1
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_ENV_HINTS=1
+
+# Journal des commandes longues : on y redirige les details (brew, etc.) pour garder
+# l'ecran propre. En cas d'echec, run_quiet affiche la fin de ce log.
+LOG="$(mktemp -t gong-bootstrap)"
+
 ORG="gongsup1"                  # org GitHub
 REF="main"                      # branche ou tag épinglé
 REPO="appsscript-starter-kit"
@@ -34,8 +46,32 @@ progress() {
   printf '\n\033[1;36m[%s] %3d%%   Etape %d/%d : %s\033[0m\n' "$bar" "$pct" "$STEP" "$TOTAL_STEPS" "$label"
 }
 
-# Rappel rassurant avant une operation longue (Homebrew, Node, telechargement de l'app).
-patience() { printf '\033[0;36m   ... %s -- laisse tourner, c'\''est normal.\033[0m\n' "$1"; }
+# Lance une commande longue SANS afficher ses details (rediriges dans $LOG), avec un petit
+# indicateur qui tourne pour montrer que ca avance. Sur succes : "OK". Sur echec : affiche la
+# fin du log (pour diagnostiquer) et arrete le script.
+#   Usage : run_quiet "Message a l'ecran" commande arg1 arg2...
+run_quiet() {
+  local msg="$1"; shift
+  printf '\033[0;36m   %s \033[0m' "$msg"
+  ( "$@" ) >>"$LOG" 2>&1 </dev/null &
+  local pid=$! i=0 c spin='|/-\'
+  while kill -0 "$pid" 2>/dev/null; do
+    c=$(( i % 4 )); i=$(( i + 1 ))
+    printf '\b%s' "${spin:c:1}"
+    sleep 0.2
+  done
+  if wait "$pid"; then
+    printf '\b\033[0;32mOK\033[0m\n'
+  else
+    local rc=$?
+    printf '\b\033[1;31mECHEC\033[0m\n' >&2
+    printf '\033[1;31m   Details (dernieres lignes) :\033[0m\n' >&2
+    tail -n 20 "$LOG" >&2
+    printf '\033[1;31m   -> Corrige le probleme ci-dessus (souvent : reseau), puis relance la meme commande.\033[0m\n' >&2
+    printf '   Log complet : %s\n' "$LOG" >&2
+    exit "$rc"
+  fi
+}
 
 # Installe Homebrew si absent (base pour Node, l'app Claude, gh).
 # Le tout premier install de Homebrew a besoin des droits admin (mot de passe Mac).
@@ -66,12 +102,8 @@ EOF
     exit 1
   fi
 
-  patience "l'installation de Homebrew prend generalement 2 a 5 minutes"
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
-    echo "" >&2
-    echo "L'installation de Homebrew a echoue. Verifie ta connexion, puis relance la commande." >&2
-    exit 1
-  }
+  run_quiet "Installation de Homebrew (2 a 5 min)" \
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
   for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
     [ -x "$b" ] && { eval "$("$b" shellenv)"; break; }
@@ -79,7 +111,7 @@ EOF
 
   command -v brew >/dev/null 2>&1 || {
     echo "" >&2
-    echo "Homebrew est installe mais pas encore visible dans ce Terminal." >&2
+    echo "Homebrew n'a pas pu s'installer (reseau ou droits ?)." >&2
     echo "-> Ferme puis rouvre le Terminal et relance la meme commande." >&2
     exit 1
   }
@@ -100,9 +132,7 @@ select AI in "Claude Code" "Codex"; do [ -n "${AI:-}" ] && break; done
 progress "Verification de Node"
 if ! command -v node >/dev/null 2>&1; then
   ensure_brew
-  say "Installation de Node..."
-  patience "environ 1 a 2 minutes"
-  brew install node
+  run_quiet "Installation de Node (~1 a 2 min)" brew install node
 else
   say "Node est deja installe."
 fi
@@ -115,9 +145,7 @@ case "$AI" in
     # PAS 'claude-code', qui est le CLI terminal.
     if ! brew list --cask claude >/dev/null 2>&1; then
       ensure_brew
-      say "Installation de l'app Claude (desktop)..."
-      patience "telechargement de plusieurs centaines de Mo, quelques minutes"
-      brew install --cask claude
+      run_quiet "Installation de l'app Claude (~quelques min)" brew install --cask claude
     else
       say "L'app Claude est deja installee."
     fi ;;
@@ -125,9 +153,7 @@ case "$AI" in
     if command -v codex >/dev/null 2>&1; then
       say "Codex est deja installe."
     else
-      say "Installation de Codex..."
-      patience "environ 1 minute"
-      npm install -g @openai/codex
+      run_quiet "Installation de Codex (~1 min)" npm install -g @openai/codex
     fi ;;
 esac
 
@@ -156,6 +182,8 @@ case "$AI" in
     # en "recents" pour y revenir facilement ensuite.
     say "Ouverture de l'app Claude (desktop)..."
     open -a "Claude" 2>/dev/null || true
+    # Copie la phrase dans le presse-papier : l'utilisateur n'a plus qu'a coller (Cmd+V).
+    printf '%s' "$PROMPT" | pbcopy 2>/dev/null || true
     printf '\033[1;36m'
     cat <<EOF
 
@@ -163,11 +191,19 @@ case "$AI" in
    Ton projet est pret dans :
      $DIR
 
+   >>> IMPORTANT : Claude NE demarre PAS tout seul. <<<
+   Ouvrir le dossier ne lance rien : c'est la PHRASE ci-dessous,
+   envoyee avec Entree, qui met l'assistant au travail.
+
    Dans l'app Claude qui vient de s'ouvrir :
      1. Clique l'onglet   Code   (en haut).
      2. Clique   Select folder   et choisis le dossier ci-dessus.
-     3. Ecris (ou colle) cette phrase, puis Entree :
-        $PROMPT
+     3. Clique dans la zone de saisie, COLLE la phrase avec Cmd+V
+        (elle est deja copiee), puis appuie sur Entree :
+
+        "$PROMPT"
+
+   -> Tant que tu n'as pas envoye cette phrase, il ne se passe rien : c'est normal.
 
    Pour REVENIR sur ce projet plus tard : ouvre l'app Claude,
    onglet Code -> il est dans tes dossiers recents.
