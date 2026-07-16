@@ -11,26 +11,13 @@
 
 set -euo pipefail
 
-ORG="gongsup1"                     # org GitHub (ex. gong-galaxy)
-REF="main"                      # branche ou tag épinglé (ex. v1)
+ORG="gongsup1"                  # org GitHub
+REF="main"                      # branche ou tag épinglé
 REPO="appsscript-starter-kit"
 
 say() { printf '\n\033[1;36m> %s\033[0m\n' "$1"; }
 
-# URL-encode (pur bash, sans dependance a python) — pour le deep-link de l'app desktop.
-urlencode() {
-  local s="$1" out='' c i
-  for (( i = 0; i < ${#s}; i++ )); do
-    c="${s:i:1}"
-    case "$c" in
-      [a-zA-Z0-9.~_-]) out+="$c" ;;
-      *) printf -v c '%%%02X' "'$c"; out+="$c" ;;
-    esac
-  done
-  printf '%s' "$out"
-}
-
-# Installe Homebrew si absent (base pour Node, l'app Claude Code, gh).
+# Installe Homebrew si absent (base pour Node, l'app Claude, gh).
 ensure_brew() {
   command -v brew >/dev/null 2>&1 && return
   say "Installation de Homebrew (mot de passe Mac probablement demande)..."
@@ -60,11 +47,12 @@ fi
 # --- 3. L'assistant IA choisi ---
 case "$AI" in
   "Claude Code")
-    # App desktop (GUI) plutot que le CLI npm : plus accueillant pour un non-dev.
-    if ! brew list --cask claude-code >/dev/null 2>&1; then
+    # App desktop GUI (onglet Code) = cask 'claude' -> Claude.app.
+    # PAS 'claude-code', qui est le CLI terminal.
+    if ! brew list --cask claude >/dev/null 2>&1; then
       ensure_brew
-      say "Installation de l'app Claude Code (desktop)..."
-      brew install --cask claude-code
+      say "Installation de l'app Claude (desktop)..."
+      brew install --cask claude
     fi ;;
   "Codex")
     command -v codex >/dev/null 2>&1 || { say "Installation de Codex..."; npm install -g @openai/codex; } ;;
@@ -84,18 +72,33 @@ curl -fsSL "https://github.com/$ORG/$REPO/archive/$REF.tar.gz" | tar -xz -C "$DI
 cd "$DIR"
 rm -f bootstrap.sh   # l'installeur du template n'a rien a faire dans le repo du projet
 
-# --- 6. Lancer l'assistant (il posera ensuite les vraies questions) ---
+# --- 6. Lancer l'assistant ---
 PROMPT="Lis AGENTS.md et aide-moi a demarrer mon application (nom du projet : $NAME)."
 case "$AI" in
   "Claude Code")
-    # Deep-link : ouvre l'app desktop DANS le dossier, avec la phrase de depart pre-remplie
-    # (l'utilisateur n'a qu'a appuyer sur Entree — le prompt n'est jamais auto-envoye).
-    say "Ouverture de l'app Claude Code sur ton projet..."
-    if open "claude-cli://open?cwd=$DIR&q=$(urlencode "$PROMPT")"; then
-      say "C'est pret : dans la fenetre Claude Code, la phrase de depart est deja ecrite — appuie sur Entree pour lancer."
-    else
-      say "Ouverture auto impossible. Ouvre l'app Claude Code, choisis 'Open folder' -> $DIR, puis tape : $PROMPT"
-    fi ;;
+    # L'app desktop ne s'ouvre pas sur un dossier par script : on la lance, l'utilisateur
+    # fait Code -> Select folder (quelques clics, zero terminal). Elle garde le dossier
+    # en "recents" pour y revenir facilement ensuite.
+    say "Ouverture de l'app Claude (desktop)..."
+    open -a "Claude" 2>/dev/null || true
+    printf '\033[1;36m'
+    cat <<EOF
+
+  ============================================================
+   Ton projet est pret dans :
+     $DIR
+
+   Dans l'app Claude qui vient de s'ouvrir :
+     1. Clique l'onglet   Code   (en haut).
+     2. Clique   Select folder   et choisis le dossier ci-dessus.
+     3. Ecris (ou colle) cette phrase, puis Entree :
+        $PROMPT
+
+   Pour REVENIR sur ce projet plus tard : ouvre l'app Claude,
+   onglet Code -> il est dans tes dossiers recents.
+  ============================================================
+EOF
+    printf '\033[0m\n' ;;
   "Codex")
     say "Pret dans $DIR — lancement de Codex."
     exec codex "$PROMPT" ;;

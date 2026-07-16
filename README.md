@@ -14,11 +14,14 @@ collaborateurs **non-développeurs**.
 ```
 
 Le script demande **quel assistant IA** (Claude Code ou Codex) et le **nom du projet**, crée le
-dossier `~/coding-projects/<nom>`, y récupère le squelette, puis **ouvre l'assistant dessus**.
-Pour **Claude Code, l'app desktop** s'ouvre directement sur le projet avec la phrase de départ
-**déjà pré-remplie** — il ne reste qu'à appuyer sur **Entrée** :
+dossier `~/coding-projects/<nom>`, y récupère le squelette, installe l'**app Claude (desktop)** et
+l'**ouvre**. Il ne reste qu'à faire, dans l'app (**zéro terminal**) : onglet **Code** → **Select
+folder** → choisir le dossier, puis écrire :
 
 > « Lis `AGENTS.md` et aide-moi à démarrer mon application. »
+
+> **Revenir sur un projet** plus tard : ouvre l'app Claude → onglet **Code** → il est dans tes
+> **dossiers récents** (pas besoin du terminal).
 
 L'assistant suit **`AGENTS.md`** (chargé automatiquement — voir `CLAUDE.md`) et déroule tout :
 connexions, création du repo **dans l'org** (privé), projet Apps Script, branchement du Google
@@ -40,7 +43,7 @@ Sheet, déploiement, puis itérations.
 | `Index.html` | Squelette front mono-page. |
 | `DEPLOY.md` | Mémo de déploiement par projet (IDs + commande de publication). |
 | `.gitignore` | Exclut jetons et tout fichier de secret. |
-| `bootstrap.sh` | Commande d'install « une ligne » (Mac) : choisit l'assistant, installe Node + l'app (**Claude Code desktop** en cask, ou **Codex** CLI), récupère le squelette, ouvre l'assistant sur le projet. |
+| `bootstrap.sh` | Commande d'install « une ligne » (Mac) : choisit l'assistant, installe Node + l'**app Claude desktop** (cask `claude`, ou **Codex** CLI), récupère le squelette, ouvre l'app. |
 
 ## Principes (résumé)
 
