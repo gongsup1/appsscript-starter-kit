@@ -225,16 +225,23 @@ git commit -m "chore: import du projet existant + standards GONG"
 gh repo create gongsup1/<nom-du-projet> --private --source=. --push
 ```
 
-**B5. (Optionnel) Ranger dans un dossier Drive** — voir la note « migration » ci-dessous.
+**B5. Ranger le projet dans le dossier Drive attitré** (humain, guidé) : pour la gouvernance, le
+projet existant doit vivre **dans le dossier de projets attitré** du collaborateur, comme un
+nouveau projet (cf. A2). Guide-le **pas à pas** :
+1. Dans **Drive**, ouvre ton **dossier attitré** (`<ID_DOSSIER_PERSO_DRIVE>` — lien partagé par FX).
+2. Crée un **sous-dossier** au nom du projet.
+3. **Glisse** dedans le **Google Sheet** du projet (s'il y en a un) **et** le **fichier du script**
+   s'il apparaît dans Drive.
+
+> **Sans risque :** déplacer ces fichiers dans un dossier **ne change ni les IDs, ni l'URL
+> `/exec`, ni le fonctionnement du code** (la position dans Drive est indépendante des IDs). Un
+> script *bound* (attaché au Sheet) suit automatiquement le Sheet. L'IA **ne peut pas** faire ce
+> déplacement à ta place (elle n'a pas accès à Drive) — c'est un simple glisser-déposer. Récupère
+> l'**ID du Sheet** et donne-le à l'IA pour `DEPLOY.md`.
 
 **B6. Vérifier** : l'URL `/exec` **inchangée** fonctionne toujours ; le code est sur GitHub ;
-`DEPLOY.md` rempli (Script ID, **DEPLOYMENT_ID**, URL, Sheet ID). ✅ → passe à la **Phase finale**.
-
-> **Migration dans un dossier Drive — possible et sans risque.** Déplacer le Google Sheet (et
-> le fichier du script) dans un dossier **ne change ni les IDs ni l'URL `/exec`** (la position
-> Drive est indépendante). Le plus simple : l'utilisateur les **glisse** dans le dossier voulu
-> dans Drive (1 geste) ; un script *bound* (attaché au Sheet) suit automatiquement le Sheet.
-> C'est aussi automatisable via une fonction `DriveApp` one-shot, mais le glisser-déposer suffit.
+`DEPLOY.md` rempli (Script ID, **DEPLOYMENT_ID**, URL, Sheet ID) ; le Sheet + le script sont **dans
+le dossier attitré**. ✅ → passe à la **Phase finale**.
 
 ---
 

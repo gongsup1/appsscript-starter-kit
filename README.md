@@ -30,6 +30,10 @@ Sheet, déploiement, puis itérations.
 > **Sans la commande** (terminal déjà équipé) : `gh repo create gongsup1/<projet> --template
 > gongsup1/appsscript-starter-kit --private --clone`, ouvrir le dossier avec l'IA, même phrase.
 
+> **Projet Apps Script déjà existant ?** L'IA le reprend aussi (Parcours B d'`AGENTS.md`) :
+> import du code, mise sous Git dans l'org, et **migration dans ton dossier Drive attitré** —
+> **sans changer son URL publique**.
+
 **Le point d'entrée du travail de l'IA, c'est [`AGENTS.md`](./AGENTS.md).**
 
 ## Contenu
