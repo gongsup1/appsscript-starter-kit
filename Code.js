@@ -16,6 +16,11 @@
 // at another, empty spreadsheet).
 const SHEET_ID = '<ID_DU_GOOGLE_SHEET>';
 
+// Deployed version shown in the page footer. ALWAYS visible in the UI so anyone can see
+// which version is running. Bump it on every publish so it matches the clasp version number
+// and the git commit (AGENTS.md §4). Injected into Index.html by doGet().
+const APP_VERSION = 'v1';
+
 // Data tabs and their header row. getTab_() creates any missing tab with these headers.
 // Add or rename tabs here; the Sheet stays the single source of truth.
 const TABS = {
@@ -54,8 +59,11 @@ function cachedJson_(cacheKey, ttlSeconds, producer) {
 
 /* ============ WEB APP ENTRY POINT ============ */
 function doGet() {
-  // Serve the single-page front-end (Index.html).
-  return HtmlService.createHtmlOutputFromFile('Index')
+  // Serve the single-page front-end (Index.html) as a template so APP_VERSION can be
+  // injected server-side — the footer then always shows the exact deployed version.
+  const tpl = HtmlService.createTemplateFromFile('Index');
+  tpl.appVersion = APP_VERSION;
+  return tpl.evaluate()
     .setTitle('<APP NAME>')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }

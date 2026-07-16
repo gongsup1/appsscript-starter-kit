@@ -269,12 +269,17 @@ Modifier le code
    ├─►  Tester sur l'URL /dev               # clasp open-web-app, ou éditeur → Déployer → Tester
    │
    └─►  Quand c'est bon :
+        # dans Code.js : mettre APP_VERSION au numéro qui va être publié (ex. 'v2')
         git add -A && git commit -m "…"      # historique du code
         git push                             # → GitHub
         clasp version "…"                    # → numéro <num> (garde la même description que le commit)
         clasp redeploy <DEPLOYMENT_ID> -V <num> -d "<Nom du projet> — app web"   # → publie sur /exec
 ```
 
+- **Numéro de version TOUJOURS affiché en pied de page.** Avant de publier, mets `APP_VERSION`
+  (dans `Code.js`) au **même numéro** que le `clasp version` créé (`v2`, `v3`…). Il s'affiche
+  **en bas de l'app** (injecté par `doGet`), pour que chacun voie d'un coup d'œil quelle version
+  tourne. Ne publie jamais sans l'avoir mis à jour.
 - **`/dev`** = bac à sable (reflète le dernier `push`). **`/exec`** = l'app publiée, elle
   ne change **que** par un `redeploy`, et son URL **ne change jamais**.
 - **Astuce cache** : juste après un `redeploy`, un appareil peut afficher l'ancien code
@@ -483,6 +488,7 @@ function setupDailyTrigger() {
 - [ ] `clasp push` sans erreur, testé sur l'URL **/dev**.
 - [ ] `git commit` + `git push` faits (le code est sur GitHub).
 - [ ] `clasp version` créé, `clasp redeploy <DEPLOYMENT_ID> -V <num>` fait — **/exec** fonctionne.
+- [ ] `APP_VERSION` (dans `Code.js`) = numéro de la version publiée, et **visible en pied de page** de l'app.
 - [ ] Aucun secret dans le code / Git ; tout en **Propriétés du script** (valeurs 1Password).
 - [ ] Onglets du Sheet auto-créés ; personnes/droits/données modifiables **sans redéployer**.
 - [ ] Appels au Sheet **par lots** ; listes chaudes **cachées** (§6).

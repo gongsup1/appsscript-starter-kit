@@ -8,6 +8,8 @@
     input, button { padding: .6rem; font-size: 1rem; }
     .row { padding: .4rem 0; border-bottom: 1px solid #eee; }
     #status { color: #b00; min-height: 1.2rem; }
+    footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid #eee;
+             color: #999; font-size: .8rem; text-align: center; }
   </style>
 </head>
 <body>
@@ -21,6 +23,9 @@
 
   <p id="status"></p>
   <div id="list">Chargement…</div>
+
+  <!-- Deployed version, injected server-side by doGet() (Code.js). Always visible. -->
+  <footer>Version <?= appVersion ?></footer>
 
   <script>
     // getData() returns a JSON string (see the comment in Code.js). Always JSON.parse it:
