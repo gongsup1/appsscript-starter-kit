@@ -38,7 +38,6 @@ Sheet, déploiement, puis itérations.
 | `appsscript.json` | Manifeste Apps Script (fuseau Paris, web-app, accès domaine). |
 | `Code.js` | Squelette back-end : sert l'app, lit/écrit le Sheet **par lots + cache + verrou**. |
 | `Index.html` | Squelette front mono-page. |
-| `SECRETS.md` | Quels secrets régler, et **où** trouver leurs valeurs (jamais dans le repo). |
 | `DEPLOY.md` | Mémo de déploiement par projet (IDs + commande de publication). |
 | `.gitignore` | Exclut jetons et tout fichier de secret. |
 | `bootstrap.sh` | Commande d'install « une ligne » (Mac) : choisit l'assistant, installe Node + l'app (**Claude Code desktop** en cask, ou **Codex** CLI), récupère le squelette, ouvre l'assistant sur le projet. |

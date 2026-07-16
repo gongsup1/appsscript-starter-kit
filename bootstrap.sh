@@ -82,6 +82,7 @@ mkdir -p "$DIR"
 say "Telechargement du squelette..."
 curl -fsSL "https://github.com/$ORG/$REPO/archive/$REF.tar.gz" | tar -xz -C "$DIR" --strip-components=1
 cd "$DIR"
+rm -f bootstrap.sh   # l'installeur du template n'a rien a faire dans le repo du projet
 
 # --- 6. Lancer l'assistant (il posera ensuite les vraies questions) ---
 PROMPT="Lis AGENTS.md et aide-moi a demarrer mon application (nom du projet : $NAME)."

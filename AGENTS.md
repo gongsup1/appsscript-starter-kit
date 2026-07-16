@@ -27,6 +27,10 @@ En permanence :
   *comment savoir que c'est bon*.
 - **Exécute toi-même** les commandes `git`, `gh` et `clasp` dans le terminal. Ne fais
   recopier des commandes à la main que si c'est explicitement demandé.
+- **Remplis toi-même tous les fichiers** (`DEPLOY.md`, nom du projet, IDs, README du projet…)
+  à partir des réponses de la conversation. L'utilisateur **n'édite jamais** un fichier à la main
+  — son seul geste « fichier » est de **coller une valeur de secret** dans l'éditeur (§7), que tu
+  guides pas à pas.
 - **Demande confirmation AVANT toute action irréversible côté Google/GitHub** : premier
   déploiement, suppression d'un fichier/onglet Drive, envoi d'un **vrai** SMS/e-mail à
   des destinataires réels (teste d'abord sur toi-même). Un dépôt public est **interdit** (règle 10).
@@ -58,7 +62,7 @@ projet (pour le dossier, le dépôt, le déploiement) — pas ce que l'app doit 
 
 1. **Secrets → jamais dans le code ni dans Git.** Clés API, mots de passe vivent dans les
    **Propriétés du script** (valeurs prises dans **1Password**, coffre `Vibe-coding`).
-   Voir `SECRETS.md` et §7. *Une clé committée reste dans l'historique Git pour toujours,
+   Voir §7. *Une clé committée reste dans l'historique Git pour toujours,
    et se fait révoquer automatiquement → panne silencieuse.*
 2. **Toujours redéployer LE MÊME déploiement.** L'URL publique `/exec` peut être imprimée
    (QR codes, liens). Le **tout premier** `clasp deploy` est le **seul** ; ensuite,
@@ -181,7 +185,9 @@ clasp deploy -V <num> -d "<Nom du projet> — app web"  # → note le DEPLOYMENT
 clasp open-web-app
 ```
 
-**A4. Mémo + commit** : remplis `DEPLOY.md`, puis
+**A4. Mémo + commit** : remplis `DEPLOY.md` ; **remplace le README** par un court README du projet
+(titre = nom du projet, 1–2 lignes, pointe vers `DEPLOY.md` pour l'URL/IDs) ; **supprime
+`bootstrap.sh`** s'il est présent (c'est l'installeur du template, inutile dans un projet). Puis
 `git add -A && git commit -m "chore: bootstrap projet Apps Script" && git push`.
 
 **A5. Vérifier** : l'URL `/exec` affiche le squelette et écrit une ligne test dans le Sheet ;
@@ -198,7 +204,7 @@ le code est sur GitHub. ✅ → passe à la **Phase finale**.
 
 **B2. Rapatrier le code** (l'IA) : si tu es parti du template, **supprime d'abord** les fichiers
 squelette (`Code.js`, `Index.html`, `appsscript.json`) — on va récupérer les vrais. Garde les
-fichiers-guides (`AGENTS.md`, `CLAUDE.md`, `README.md`, `SECRETS.md`, `DEPLOY.md`, `.gitignore`). Puis :
+fichiers-guides (`AGENTS.md`, `CLAUDE.md`, `README.md`, `DEPLOY.md`, `.gitignore`). Puis :
 ```bash
 clasp clone <SCRIPT_ID>        # rapatrie le code existant + écrit .clasp.json
 ```
@@ -282,7 +288,6 @@ Le squelette est déjà en place — adapte-le, ne repars pas de zéro :
 | `appsscript.json` | Manifeste : fuseau Europe/Paris, web-app `executeAs USER_DEPLOYING`, `access DOMAIN`. |
 | `Code.js` | Backend : `doGet` sert l'app, lecture/écriture du Sheet **par lots + cache + verrou**, onglets auto-créés. À adapter (`TABS`, `getData`, `saveEntry`). |
 | `Index.html` | Front mono-page : appelle le backend via `google.script.run`, `JSON.parse` des réponses. |
-| `SECRETS.md` | Liste des Propriétés du script à régler (sans valeurs) + où les trouver. |
 | `DEPLOY.md` | Mémo de déploiement du projet (IDs + commande de publication pré-remplie). |
 | `.gitignore` | Exclut jetons clasp, `node_modules`, sauvegardes, tout fichier de secret. |
 | `.clasp.json` | Créé par `clasp create` ; associe le dossier au projet Apps Script. |
@@ -310,24 +315,37 @@ rame, c'est presque toujours **trop d'appels au Sheet**. Règles, déjà appliqu
 
 ---
 
-## 7. Gérer les secrets
+## 7. Gérer les secrets (clés API, mots de passe)
 
-1. Éditeur Apps Script (`clasp open-script`) → ⚙️ **Paramètres du projet** →
-   **Propriétés du script** → *Ajouter une propriété*.
-2. **Clé** = le nom utilisé dans le code (ex. `BREVO_API_KEY`). **Valeur** = prise dans
-   **1Password** (coffre `Vibe-coding`). Voir `SECRETS.md`.
-3. Dans le code, lire ainsi (jamais la valeur en dur) :
-   ```js
-   const KEY = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || '';
-   ```
-4. **Jamais** de valeur de secret dans un fichier suivi par Git, un message, un README.
-   Si un secret a fuité → **préviens FX immédiatement** (révocation + régénération).
+Les secrets vivent dans les **Propriétés du script** — l'équivalent Apps Script d'un `.env`,
+**côté Google, jamais dans le dépôt**. Apps Script n'a **pas** de `.env` ni de variables
+d'environnement : **ni `clasp`, ni l'API, ni toi (l'IA) ne pouvez les écrire**. Tu prépares tout
+le reste ; **coller la valeur est le SEUL geste humain** — et tu le **guides pas à pas**.
 
-> **Ces propriétés se posent UNIQUEMENT à la main, dans l'éditeur.** Ni `clasp`, ni l'API
-> Apps Script, ni toi (l'IA) ne pouvez les écrire : Apps Script n'a **pas** de `.env` ni de
-> variables d'environnement à l'exécution — les **Propriétés du script _sont_ son `.env`**,
-> côté Google, hors du dépôt. Tu prépares tout le reste ; **coller la valeur reste le seul
-> geste humain.** Guide l'utilisateur **pas à pas** (mode d'emploi détaillé dans `SECRETS.md`).
+**Secrets de ce kit :**
+
+| Clé (= nom de la Propriété) | Sert à | Valeur | Requis ? |
+|---|---|---|---|
+| `BREVO_API_KEY` | Envoi e-mails (§8a) et SMS (§8b) via Brevo | 1Password, coffre `Vibe-coding` → la clé Brevo **attribuée à l'utilisateur** (créée par le service informatique) | Oui si e-mail/SMS |
+
+**Poser une clé — déroule ces étapes AVEC l'utilisateur**, à voix haute, une par une :
+
+1. Ouvre l'éditeur : `clasp open-script` (ou <https://script.google.com>).
+2. En bas à gauche : ⚙️ **Paramètres du projet**.
+3. Section **Propriétés du script** → **Ajouter une propriété de script**.
+4. **Propriété** (le nom, à taper **exactement**) : `BREVO_API_KEY`.
+5. **Valeur** : ouvre **1Password** → coffre `Vibe-coding` → la clé Brevo attribuée à l'utilisateur,
+   copie-la et **colle-la** (jamais tapée à la main, jamais notée ailleurs). Pas encore de clé ? → service informatique.
+6. **Enregistrer les propriétés du script**. L'app la lira seule via `PropertiesService`.
+
+Dans le code, lire ainsi (jamais la valeur en dur) :
+```js
+const KEY = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || '';
+```
+
+**Jamais** de valeur de secret dans un fichier suivi par Git, un message, un README : une clé
+committée reste dans l'historique **et se fait révoquer** → panne silencieuse. En cas de fuite →
+**préviens FX immédiatement** (révocation + régénération ; supprimer le fichier ne suffit pas).
 
 ---
 
@@ -341,7 +359,7 @@ rame, c'est presque toujours **trop d'appels au Sheet**. Règles, déjà appliqu
 ```js
 /* ============ RECIPE: EMAIL (Brevo transactional) ============ */
 // Same provider and key as the SMS recipe (§8.b): the Brevo API key lives in Script
-// Properties (BREVO_API_KEY), value copied ONCE from 1Password (see SECRETS.md). Brevo
+// Properties (BREVO_API_KEY), value copied ONCE from 1Password (see §7). Brevo
 // sends the mail AS noreply@gong-galaxy.com — a verified sender in Brevo, with the
 // gong-galaxy.com domain authenticated (SPF/DKIM). No Google "Send as" alias is involved,
 // and no SMTP password ever lives in an app.

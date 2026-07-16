@@ -18,7 +18,7 @@
 
 > 🔑 La **clé Brevo** (`BREVO_API_KEY`) n'est **pas** un identifiant à noter ici : c'est un
 > **secret**. Elle vit dans les **Propriétés du script** (valeur depuis 1Password), jamais
-> dans ce fichier. Mode d'emploi : `SECRETS.md`.
+> dans ce fichier. Mode d'emploi : `AGENTS.md` §7.
 
 ## Publier une modification
 
