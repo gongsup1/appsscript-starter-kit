@@ -11,15 +11,20 @@
  */
 
 /* ============ CONFIG ============ */
-// ID of the data spreadsheet. We ALWAYS open it by id and NEVER call getActiveSpreadsheet():
-// the latter is unreliable in a web app (/exec) and in time-driven triggers (it can point
-// at another, empty spreadsheet).
-const SHEET_ID = '<ID_DU_GOOGLE_SHEET>';
+// The data spreadsheet, as a FULL URL or a bare ID -- both work, so a non-dev can just paste
+// the Sheet's address bar. sheetId_() extracts the ID from a URL when needed, and we ALWAYS
+// open by id, NEVER getActiveSpreadsheet() (the latter is unreliable in a web app /exec and in
+// time-driven triggers -- it can point at another, empty spreadsheet).
+// A Sheet URL looks like: https://docs.google.com/spreadsheets/d/THE_ID/edit
+const SHEET_SOURCE = '<URL_OU_ID_DU_GOOGLE_SHEET>';
 
 // Deployed version shown in the page footer. ALWAYS visible in the UI so anyone can see
 // which version is running. Bump it on every publish so it matches the clasp version number
 // and the git commit (AGENTS.md §4). Injected into Index.html by doGet().
 const APP_VERSION = 'v1';
+
+// App name shown in the page header (Index.html) and the browser tab. Injected by doGet().
+const APP_NAME = '<APP NAME>';
 
 // Data tabs and their header row. getTab_() creates any missing tab with these headers.
 // Add or rename tabs here; the Sheet stays the single source of truth.
@@ -32,8 +37,15 @@ const TABS = {
 // slow round-trip; memoising it avoids paying that cost again in every helper.
 let _ss = null;
 function ss_() {
-  if (!_ss) _ss = SpreadsheetApp.openById(SHEET_ID);
+  if (!_ss) _ss = SpreadsheetApp.openById(sheetId_(SHEET_SOURCE));
   return _ss;
+}
+
+// Accept a full Sheet URL or a bare ID: extract the ID (the /d/<ID>/ part) from a URL, or
+// return the trimmed value as-is when it's already an ID. Lets the config hold either form.
+function sheetId_(source) {
+  const m = String(source).match(/\/d\/([A-Za-z0-9_-]+)/);
+  return m ? m[1] : String(source).trim();
 }
 
 // Read a whole tab in ONE call. getDataRange().getValues() is a single round-trip; reading
@@ -59,12 +71,13 @@ function cachedJson_(cacheKey, ttlSeconds, producer) {
 
 /* ============ WEB APP ENTRY POINT ============ */
 function doGet() {
-  // Serve the single-page front-end (Index.html) as a template so APP_VERSION can be
-  // injected server-side — the footer then always shows the exact deployed version.
+  // Serve the single-page front-end (Index.html) as a template so the app name and version
+  // are injected server-side — the header and footer then reflect the deployed code exactly.
   const tpl = HtmlService.createTemplateFromFile('Index');
+  tpl.appName = APP_NAME;
   tpl.appVersion = APP_VERSION;
   return tpl.evaluate()
-    .setTitle('<APP NAME>')
+    .setTitle(APP_NAME)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 

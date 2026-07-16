@@ -74,8 +74,9 @@ projet (pour le dossier, le dépôt, le déploiement) — pas ce que l'app doit 
 4. **Code commenté en anglais, tout le reste en français** (README, interface, doc, noms d'onglets).
 5. **Le Google Sheet est la source de vérité.** Données **et** listes de personnes/droits
    vivent dans des onglets **créés automatiquement** et **modifiables sans redéployer**.
-6. **Toujours `openById(SHEET_ID)`, jamais `getActiveSpreadsheet()`** (ce dernier n'est pas
-   fiable en web-app `/exec` ni en déclencheur).
+6. **Toujours ouvrir le Sheet par son ID (`openById`), jamais `getActiveSpreadsheet()`** (ce
+   dernier n'est pas fiable en web-app `/exec` ni en déclencheur). Le squelette accepte l'**URL
+   complète ou l'ID** dans `SHEET_SOURCE` : `sheetId_()` en extrait l'ID, puis `openById`.
 7. **`google.script.run` sérialise mal les tableaux d'objets** : une fonction serveur qui
    renvoie une liste/objet renvoie une **chaîne JSON** ; le navigateur fait `JSON.parse`.
 8. **Parle au Sheet par LOTS, pas cellule par cellule**, et **cache** les listes qui
@@ -113,6 +114,7 @@ Puis les deux connexions (l'IA lance les commandes, l'humain fait le clic naviga
 ```bash
 clasp login        # se connecter avec le compte @gong-galaxy.com
 gh auth login      # GitHub.com → HTTPS → "Login with a web browser" (aucune clé SSH à créer)
+gh auth setup-git  # branche gh comme gestionnaire d'identifiants Git → `git push` marche sans mot de passe
 ```
 
 > **Compte GitHub.** Si l'humain n'en a pas : le créer sur https://github.com avec son
@@ -166,9 +168,10 @@ Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 
 **A2. Dossier Drive + Sheet** (humain) : ouvre le **dossier qui t'a été attribué** pour tes
 projets — **FX t'en a partagé le lien** (c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un
-**sous-dossier** au nom du projet, puis **à l'intérieur** un **Google Sheet** vide. Copie l'**ID
-du Sheet** depuis son URL : `https://docs.google.com/spreadsheets/d/`**`CET_ID`**`/edit`, et
-donne-le à l'IA (avec l'**ID du dossier**).
+**sous-dossier** au nom du projet, puis **à l'intérieur** un **Google Sheet** vide. **Copie
+l'URL entière du Sheet** (la barre d'adresse du navigateur) et donne-la à l'IA — **pas besoin
+d'y repérer l'ID**, le squelette accepte l'URL complète et en extrait l'ID tout seul. Donne
+aussi l'**ID (ou l'URL) du dossier**.
 
 > Le Sheet **doit** vivre dans ton dossier attitré : c'est là que FX peut le retrouver et
 > l'auditer. L'IA **ne peut pas** créer ce dossier/Sheet à ta place — écrire dans Drive
@@ -178,7 +181,10 @@ donne-le à l'IA (avec l'**ID du dossier**).
 **A3. Brancher + déployer le squelette** (l'IA, déploiement à confirmer) :
 ```bash
 clasp create --type standalone --title "<Nom du projet>"
-# dans Code.js : remplacer <ID_DU_GOOGLE_SHEET> (Sheet de A2) et <APP NAME>
+git restore appsscript.json   # ⚠️ clasp create ÉCRASE le manifeste par sa version par défaut
+                              #    (fuseau New York, sans web-app ni access DOMAIN). On remet
+                              #    celui du squelette depuis Git AVANT de pousser.
+# dans Code.js : remplacer <URL_OU_ID_DU_GOOGLE_SHEET> (colle l'URL du Sheet de A2) et <APP NAME>
 clasp push
 clasp version "v1 — squelette"                        # → numéro <num>
 clasp deploy -V <num> -d "<Nom du projet> — app web"  # → note le DEPLOYMENT_ID (AKfyc…) = le SEUL
@@ -237,10 +243,10 @@ nouveau projet (cf. A2). Guide-le **pas à pas** :
 > `/exec`, ni le fonctionnement du code** (la position dans Drive est indépendante des IDs). Un
 > script *bound* (attaché au Sheet) suit automatiquement le Sheet. L'IA **ne peut pas** faire ce
 > déplacement à ta place (elle n'a pas accès à Drive) — c'est un simple glisser-déposer. Récupère
-> l'**ID du Sheet** et donne-le à l'IA pour `DEPLOY.md`.
+> l'**URL du Sheet** et donne-la à l'IA pour `DEPLOY.md`.
 
 **B6. Vérifier** : l'URL `/exec` **inchangée** fonctionne toujours ; le code est sur GitHub ;
-`DEPLOY.md` rempli (Script ID, **DEPLOYMENT_ID**, URL, Sheet ID) ; le Sheet + le script sont **dans
+`DEPLOY.md` rempli (Script ID, **DEPLOYMENT_ID**, URL, Sheet URL/ID) ; le Sheet + le script sont **dans
 le dossier attitré**. ✅ → passe à la **Phase finale**.
 
 ---
@@ -471,7 +477,7 @@ function setupDailyTrigger() {
 
 | Symptôme | Cause | Solution |
 |---|---|---|
-| Données « vides » alors que le Sheet est rempli | `getActiveSpreadsheet()` vise le mauvais classeur | Toujours `openById(SHEET_ID)` (règle n°6) |
+| Données « vides » alors que le Sheet est rempli | `getActiveSpreadsheet()` vise le mauvais classeur | Toujours ouvrir par ID (`openById`, règle n°6) |
 | Une liste arrive `null` dans le navigateur | `google.script.run` sérialise mal les tableaux d'objets | Renvoyer une **chaîne JSON**, `JSON.parse` côté client (règle n°7) |
 | L'app rame | Trop d'appels au Sheet | Lire/écrire **par lots**, cacher les listes (§6) |
 | `/exec` en erreur d'autorisation après une modif | Nouveau scope OAuth non accepté | Tester dans l'éditeur, accepter, **puis** redéployer (règle n°9) |
@@ -479,7 +485,8 @@ function setupDailyTrigger() {
 | L'appareil affiche l'ancien code après un redeploy | Cache navigateur | Ouvrir l'URL avec `?cb=1` |
 | L'URL publique a changé (QR/liens morts) | `clasp deploy` a créé un **nouveau** déploiement | Toujours `redeploy` le même `DEPLOYMENT_ID` (règle n°2) |
 | Fonction qui pollue le menu *Exécuter* | Fonction « publique » | Suffixer son nom par `_` → privée |
-| `git push` refusé | Pas connecté | `gh auth login` (§2) |
+| `git push` refusé (identifiants) | git ne connaît pas tes identifiants GitHub | `gh auth login` **puis** `gh auth setup-git` (§2) |
+| Fuseau « New York » / `access DOMAIN` disparu après `clasp create` | `clasp create` écrase `appsscript.json` par sa version par défaut | `git restore appsscript.json` juste après `clasp create`, avant `clasp push` (§3, A3) |
 
 ---
 
@@ -520,7 +527,7 @@ NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) 
     <VAULT_1PASSWORD>=Vibe-coding  ✓ renseigné (coffre 1Password ; clé Brevo par utilisateur autorisé, créée par le service info)
   Renseignés par le collaborateur au bootstrap :
     <TON_PRÉNOM>, <ID_DOSSIER_PERSO_DRIVE>, <ID_DU_SOUS_DOSSIER_DRIVE>,
-    <ID_DU_GOOGLE_SHEET>, <SCRIPT_ID>, <DEPLOYMENT_ID>, <URL_EXEC>, <URL_DU_REPO_GITHUB>
+    <URL_OU_ID_DU_GOOGLE_SHEET>, <SCRIPT_ID>, <DEPLOYMENT_ID>, <URL_EXEC>, <URL_DU_REPO_GITHUB>
   Côté FX, une fois :
     - créer l'org GitHub (owner dev@), publier gongsup1/appsscript-starter-kit en PUBLIC,
       le marquer "Template repository", autoriser les membres à créer des repos privés,

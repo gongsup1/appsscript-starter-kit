@@ -10,7 +10,7 @@
 | Clé | Valeur |
 |---|---|
 | Script ID | `<SCRIPT_ID>` |
-| Sheet ID (données) | `<ID_DU_GOOGLE_SHEET>` |
+| Sheet (URL ou ID) | `<URL_OU_ID_DU_GOOGLE_SHEET>` |
 | Dossier Drive du projet | `<ID_DU_SOUS_DOSSIER_DRIVE>` |
 | **Deployment ID — NE JAMAIS EN CRÉER UN AUTRE** | `<DEPLOYMENT_ID>` |
 | URL publique `/exec` (ne change jamais) | `<URL_EXEC>` |
