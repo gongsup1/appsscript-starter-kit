@@ -261,6 +261,10 @@ Puis construis / fais évoluer de façon **incrémentale** en suivant la boucle 
 `Code.js`/`Index.html`, tester sur `/dev`, `commit` + `push`, `version` + `redeploy` sur le
 **DEPLOYMENT_ID** enregistré).
 
+> **L'interface doit respecter la charte graphique** (section « Charte graphique — OBLIGATOIRE » :
+> `design-system/`). Sobre, gris + accent noir, couleur réservée au feedback, en-tête `<app-header>`
+> avec l'utilisateur connecté, **responsive**. Ouvre `design-system/showcase.html` pour voir les composants.
+
 ---
 
 ## 4. La boucle d'itération (à chaque modification)
@@ -309,6 +313,46 @@ Le squelette est déjà en place — adapte-le, ne repars pas de zéro :
 | `DEPLOY.md` | Mémo de déploiement du projet (IDs + commande de publication pré-remplie). |
 | `.gitignore` | Exclut jetons clasp, `node_modules`, sauvegardes, tout fichier de secret. |
 | `.clasp.json` | Créé par `clasp create` ; associe le dossier au projet Apps Script. |
+| `design-system/` | **Charte graphique** partagée : `brand.css` (tokens + composants), `header.js` (`<app-header>`), `GUIDELINES.md` (règles d'usage), `showcase.html` (aperçu). Voir la section suivante. |
+
+---
+
+## Charte graphique (design system) — OBLIGATOIRE
+
+Toutes les web-apps internes GONG partagent **une même charte**, sobre : niveaux de gris, **noir
+comme seul accent**, la **couleur réservée au feedback**. Elle vit dans le dossier **`design-system/`**.
+
+**Avant de coder l'interface :** ouvre `design-system/showcase.html` (aperçu de tous les composants)
+et lis `design-system/GUIDELINES.md` (les règles détaillées).
+
+**Règles non négociables (résumé) :**
+- **Sobre : gris doux + accent noir.** La couleur ne sert qu'au **feedback** (alertes, statuts,
+  validation), **jamais** en décoration. **Pas de vert.**
+- **Un seul thème clair**, pas de sélecteur clair/sombre — on reste simple.
+- **Responsive obligatoire** (desktop / tablette / mobile) : balise `<meta name="viewport">`, images
+  `max-width:100%`, contenu large (tableaux) qui **défile dans son conteneur**, pas la page.
+- **En-tête `<app-header>` sur chaque page** : logo à gauche · barre verticale · nom de l'app, et
+  **à droite l'utilisateur Google Workspace connecté** (injecté par le backend, voir ci-dessous).
+- **Réutilise les composants et les tokens `--gg-*`** de `brand.css`. Ne réinvente pas de style,
+  ne mets **aucune couleur en dur**.
+
+**Afficher l'utilisateur connecté** — dans `doGet`, injecte l'e-mail du domaine :
+```js
+const email = Session.getActiveUser().getEmail();   // personne connectée (même domaine)
+tpl.userEmail = email;
+tpl.userName  = email;   // ou un nom d'affichage plus lisible
+```
+```html
+<app-header app-name="<?= appName ?>" user-name="<?= userName ?>" user-email="<?= userEmail ?>"></app-header>
+```
+
+**Brancher la charte dans une web-app Apps Script.** Apps Script ne sert pas de fichiers `.css`/`.js`
+statiques → on met leur contenu dans des fichiers `.html` inclus depuis `Index.html` :
+1. `Styles.html` = `<style>` + tout le contenu de `design-system/brand.css` + `</style>`.
+2. `Header.html` = `<script>` + tout le contenu de `design-system/header.js` + `</script>`.
+3. Helper dans `Code.js` : `function include(n){ return HtmlService.createHtmlOutputFromFile(n).getContent(); }`
+4. Dans `Index.html` : `<?!= include('Styles') ?>` dans le `<head>`, `<?!= include('Header') ?>` en
+   fin de `<body>`, et `<app-header …>` juste après l'ouverture du `<body>`.
 
 ---
 
@@ -496,6 +540,7 @@ function setupDailyTrigger() {
 - [ ] `git commit` + `git push` faits (le code est sur GitHub).
 - [ ] `clasp version` créé, `clasp redeploy <DEPLOYMENT_ID> -V <num>` fait — **/exec** fonctionne.
 - [ ] `APP_VERSION` (dans `Code.js`) = numéro de la version publiée, et **visible en pied de page** de l'app.
+- [ ] L'interface respecte la **charte graphique** (`design-system/` : `brand.css` + `<app-header>` + tokens `--gg-*`), **sobre**, **responsive** (testée sur mobile), en-tête avec l'utilisateur connecté.
 - [ ] Aucun secret dans le code / Git ; tout en **Propriétés du script** (valeurs 1Password).
 - [ ] Onglets du Sheet auto-créés ; personnes/droits/données modifiables **sans redéployer**.
 - [ ] Appels au Sheet **par lots** ; listes chaudes **cachées** (§6).

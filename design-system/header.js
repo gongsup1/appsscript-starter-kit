@@ -1,0 +1,153 @@
+// Reusable application header for GONG internal tools.
+//
+// Layout:  [ logo ] | app name .......................... [ signed-in user ]
+//
+// Usage (drop into any app):
+//   <link rel="stylesheet" href="brand.css" />
+//   <script src="header.js" defer></script>
+//   <app-header app-name="Mon outil"
+//               user-name="Jean Dupont"
+//               user-email="jean.dupont@gong-galaxy.com"></app-header>
+//
+// The signed-in user is ALWAYS shown on the right. In a Google Apps Script web
+// app, the backend injects the current Workspace user, e.g. in doGet():
+//   const email = Session.getActiveUser().getEmail();  // same-domain user
+//   tpl.userEmail = email;
+//   tpl.userName  = email;      // or a friendlier display name
+// then render:
+//   <app-header app-name="..." user-name="<?= userName ?>" user-email="<?= userEmail ?>">
+//
+// You can also set it at runtime: document.querySelector('app-header')
+//   .setUser({ name: 'Jean Dupont', email: 'jean.dupont@gong-galaxy.com' });
+//
+// Single theme for now (soft light grey) — no theme switch. Shadow DOM keeps the
+// header's styles isolated; it reads the shared --gg-* tokens from brand.css.
+
+const GONG_LOGO_SVG = `
+<svg viewBox="0 0 235 41" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GONG Galaxy">
+  <path fill="currentColor" d="M64.975 20.205c-.488.963-.733 2.365-.733 3.542 0 1.177.237 2.48.707 3.442a7.155 7.155 0 0 0 2 2.487 9.488 9.488 0 0 0 3.06 1.593c1.252.385 2.556.572 3.866.555h12.287a.098.098 0 0 0 .098-.098V26.79a.097.097 0 0 0-.098-.098H75.958a.197.197 0 0 1-.182-.124.194.194 0 0 1 .049-.214l6.09-5.689a.393.393 0 0 1 .269-.105h13.868a.196.196 0 0 1 .196.195v19.075a.194.194 0 0 1-.196.195H73.875a23.593 23.593 0 0 1-7.88-1.275 19.434 19.434 0 0 1-6.24-3.514 16.201 16.201 0 0 1-4.116-5.295 14.944 14.944 0 0 1-1.495-6.638 14.329 14.329 0 0 1 1.495-6.546 15.435 15.435 0 0 1 4.115-5.098 18.711 18.711 0 0 1 6.242-3.286 25.838 25.838 0 0 1 7.879-1.152h21.908a.196.196 0 0 1 .193.238.194.194 0 0 1-.058.1l-8.304 7.757a.393.393 0 0 1-.267.105H73.875a11.972 11.972 0 0 0-3.817.586 9.396 9.396 0 0 0-3.061 1.667 7.957 7.957 0 0 0-2.022 2.532Zm113.491 7.468L159.613 7.351a.395.395 0 0 0-.29-.127h-9.565a.198.198 0 0 0-.139.057.198.198 0 0 0-.057.138v32.41c0 .051.021.101.057.138a.198.198 0 0 0 .139.057h9.543a.193.193 0 0 0 .196-.195l.178-20.19a.096.096 0 0 1 .063-.092.097.097 0 0 1 .108.026l18.712 20.32a.393.393 0 0 0 .29.129h9.71c.052 0 .102-.02.138-.057a.194.194 0 0 0 .058-.138V7.419a.194.194 0 0 0-.058-.138.194.194 0 0 0-.138-.057l-9.69.063a.193.193 0 0 0-.196.195l-.041 20.127c0 .02-.006.04-.018.056a.098.098 0 0 1-.155.008h.008ZM145.447 23.6c0 6.034-1.875 10.443-5.624 13.229-3.749 2.785-9.389 4.176-16.919 4.172-7.559 0-13.204-1.39-16.937-4.172-3.732-2.782-5.598-7.191-5.598-13.23 0-6.001 1.874-10.393 5.622-13.176 3.748-2.783 9.385-4.174 16.913-4.174 7.495 0 13.125 1.391 16.89 4.174 3.765 2.783 5.646 7.175 5.645 13.177h.008Zm-10.135 0c0-1.846-.22-3.343-.658-4.49a5.351 5.351 0 0 0-2.127-2.664c-.978-.632-2.255-1.06-3.831-1.283a50.553 50.553 0 0 0-11.561 0c-1.578.223-2.857.65-3.835 1.283a5.344 5.344 0 0 0-2.126 2.663c-.435 1.146-.653 2.642-.655 4.49-.001 1.849.217 3.346.655 4.491a5.482 5.482 0 0 0 2.126 2.69c.978.651 2.257 1.086 3.835 1.305a50.26 50.26 0 0 0 11.561 0c1.579-.22 2.855-.655 3.831-1.305a5.37 5.37 0 0 0 1.266-1.157c.363-.465.653-.982.861-1.533.433-1.147.65-2.643.65-4.49h.008Zm70.437-5.92a9.427 9.427 0 0 1 3.059-1.67c1.233-.4 2.523-.597 3.819-.585h13.471a.394.394 0 0 0 .268-.105l8.305-7.757a.196.196 0 0 0-.025-.304.194.194 0 0 0-.11-.034h-21.909a25.838 25.838 0 0 0-7.879 1.152 18.73 18.73 0 0 0-6.243 3.286 15.477 15.477 0 0 0-4.115 5.097 14.348 14.348 0 0 0-1.494 6.547 14.976 14.976 0 0 0 1.494 6.638 16.241 16.241 0 0 0 4.115 5.295 19.454 19.454 0 0 0 6.243 3.514c2.534.87 5.199 1.3 7.879 1.275h22.177c.052 0 .102-.02.139-.057a.197.197 0 0 0 .057-.138V20.746a.197.197 0 0 0-.057-.138.197.197 0 0 0-.139-.057h-13.868a.39.39 0 0 0-.268.105l-6.099 5.701a.195.195 0 0 0 .024.304c.032.022.07.034.11.034h10.203c.026 0 .051.01.069.029a.095.095 0 0 1 .029.069v4.933c0 .026-.01.051-.029.07a.097.097 0 0 1-.069.028H212.62a12.611 12.611 0 0 1-3.867-.564 9.5 9.5 0 0 1-3.059-1.594 7.151 7.151 0 0 1-2.008-2.477c-.472-.962-.71-2.265-.71-3.442s.247-2.58.735-3.542a7.966 7.966 0 0 1 2.03-2.526h.008ZM41.068 36.162c-6.957 6.929-17.54 5.959-23.447-.017a16.943 16.943 0 0 1-2.296-2.867v-.011C9.428 22.71 5.22 11.205.02.282A.195.195 0 0 1 .153.005a.197.197 0 0 1 .116.01L18.191 6.91a.197.197 0 0 0 .268-.148.195.195 0 0 0-.015-.114L15.68.364a.195.195 0 0 1 .148-.274c.04-.006.08 0 .117.018 7.313 3.479 15.034 6.36 22.031 10.277 9.306 5.578 10.566 18.327 3.093 25.777Zm-7.184-18.618c-3.527-1.977-7.429-3.432-11.12-5.187a.098.098 0 0 0-.132.127l1.395 3.176a.097.097 0 0 1-.068.136.097.097 0 0 1-.057-.005l-9.05-3.48a.098.098 0 0 0-.123.132c2.628 5.52 4.744 11.318 7.723 16.648v.015c.332.52.72 1.003 1.156 1.441 2.98 3.016 8.322 3.514 11.832 0 3.778-3.754 3.143-10.19-1.558-13.003h.002Z"/>
+</svg>`;
+
+const TEMPLATE = `
+<style>
+  :host { display: block; }
+  .header {
+    height: var(--gg-header-height, 60px);
+    background: var(--gg-surface, #fafafb);
+    border-bottom: 1px solid var(--gg-border, #d3d3d8);
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 16px; position: sticky; top: 0; z-index: 100;
+  }
+  .brand { display: inline-flex; align-items: center; color: var(--gg-text, #1b1b1d); text-decoration: none; flex: none; }
+  .brand svg { height: 19px; width: auto; display: block; }
+  .divider { width: 1px; height: 22px; background: var(--gg-border, #d3d3d8); flex: none; }
+  .app-name {
+    font-weight: 600; font-size: 0.95rem; color: var(--gg-text-muted, #6c6c72);
+    letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+  }
+  .spacer { flex: 1 1 auto; min-width: 8px; }
+
+  .user { display: inline-flex; align-items: center; gap: 9px; flex: none; max-width: 55vw; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex: none;
+    background: var(--gg-accent, #1b1b1d); color: var(--gg-on-accent, #fafafa);
+    display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700;
+  }
+  .who { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .who .name { font-size: 0.86rem; font-weight: 600; color: var(--gg-text, #1b1b1d); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who .email { font-size: 0.74rem; color: var(--gg-text-muted, #6c6c72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who.no-email { justify-content: center; }
+
+  /* Tablet / phone: keep the avatar, drop the text to save room. */
+  @media (max-width: 560px) { .who { display: none; } }
+  @media (max-width: 380px) { .app-name { font-size: 0.9rem; } }
+</style>
+
+<header class="header">
+  <a class="brand" part="brand" id="brand">${GONG_LOGO_SVG}</a>
+  <span class="divider"></span>
+  <span class="app-name" id="app-name"></span>
+  <span class="spacer"></span>
+  <div class="user" id="user"></div>
+</header>
+`;
+
+class AppHeader extends HTMLElement {
+  static get observedAttributes() {
+    return ['app-name', 'home-href', 'user-name', 'user-email'];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = TEMPLATE;
+  }
+
+  connectedCallback() {
+    const brand = this.shadowRoot.getElementById('brand');
+    brand.setAttribute('href', this.getAttribute('home-href') || '/');
+    this.shadowRoot.getElementById('app-name').textContent = this.getAttribute('app-name') || '';
+    this._renderUser();
+  }
+
+  attributeChangedCallback(name, _old, value) {
+    if (!this.shadowRoot) return;
+    if (name === 'app-name') {
+      const el = this.shadowRoot.getElementById('app-name');
+      if (el) el.textContent = value || '';
+    } else if (name === 'home-href') {
+      const brand = this.shadowRoot.getElementById('brand');
+      if (brand) brand.setAttribute('href', value || '/');
+    } else {
+      this._renderUser();
+    }
+  }
+
+  // Set the signed-in user at runtime: setUser({ name, email }).
+  setUser(user) {
+    if (user && (user.name || user.email)) {
+      if (user.name) this.setAttribute('user-name', user.name);
+      if (user.email) this.setAttribute('user-email', user.email);
+    } else {
+      this.removeAttribute('user-name');
+      this.removeAttribute('user-email');
+    }
+    this._renderUser();
+  }
+
+  _renderUser() {
+    const host = this.shadowRoot.getElementById('user');
+    if (!host) return;
+    const email = this.getAttribute('user-email') || '';
+    const name = this.getAttribute('user-name') || email || '';
+
+    if (!name && !email) {
+      // No user provided yet — show a neutral placeholder, never a broken header.
+      host.innerHTML = `<span class="avatar" aria-hidden="true">?</span>
+        <div class="who no-email"><span class="name">Non connecté</span></div>`;
+      host.removeAttribute('title');
+      return;
+    }
+
+    const initials = this._initials(name);
+    host.setAttribute('title', email || name);
+    host.innerHTML = `
+      <span class="avatar" aria-hidden="true">${this._escape(initials)}</span>
+      <div class="who ${email ? '' : 'no-email'}">
+        <span class="name">${this._escape(name)}</span>
+        ${email ? `<span class="email">${this._escape(email)}</span>` : ''}
+      </div>`;
+  }
+
+  _initials(name) {
+    return name.trim().split(/[\s.@_-]+/).filter(Boolean).slice(0, 2)
+      .map((p) => (p[0] || '').toUpperCase()).join('') || '?';
+  }
+
+  _escape(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+}
+
+customElements.define('app-header', AppHeader);
