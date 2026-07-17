@@ -3,181 +3,103 @@
 <head>
   <meta charset="utf-8">
   <base target="_top">
+  <!-- Shared GONG design charter (tokens + components). See design-system/. -->
+  <?!= include('Styles') ?>
   <style>
-    /* ---- Design tokens. To rebrand: change --accent, plus the two rgba tints noted below. ---- */
-    :root {
-      --accent: #4f46e5;
-      --accent-ink: #ffffff;
-      --accent-tint: rgba(79, 70, 229, .12);   /* keep in sync with --accent */
-      --accent-ring: rgba(79, 70, 229, .28);   /* keep in sync with --accent */
-      --bg: #f5f6f8;
-      --card: #ffffff;
-      --text: #171826;
-      --muted: #6b7280;
-      --border: #e6e8ec;
-      --danger: #c0392b;
-      --radius: 14px;
-      --shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px rgba(16, 24, 40, .06);
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0f1116; --card: #191c23; --text: #e8eaf0; --muted: #99a0ad;
-        --border: #272c38; --danger: #ff6b6b;
-        --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .4);
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
-      line-height: 1.5; -webkit-font-smoothing: antialiased;
-    }
-    .wrap { max-width: 620px; margin: 0 auto; padding: 2.25rem 1rem 3rem; }
-
-    header.hero { text-align: center; margin-bottom: 1.75rem; }
-    .badge {
-      display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em;
-      text-transform: uppercase; color: var(--accent); background: var(--accent-tint);
-      padding: .28rem .7rem; border-radius: 999px; margin-bottom: .8rem;
-    }
-    h1 { font-size: 1.95rem; margin: .1rem 0 .35rem; letter-spacing: -.02em; }
-    .subtitle { color: var(--muted); margin: 0; }
-
-    .card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding: 1.25rem 1.25rem 1.4rem; margin-bottom: 1.25rem;
-    }
-    .card h2 { font-size: 1rem; margin: 0 0 .5rem; }
-
-    label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin: .8rem 0 .3rem; }
-    input {
-      width: 100%; padding: .72rem .8rem; font-size: 1rem; color: var(--text);
-      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
-      transition: border-color .15s ease, box-shadow .15s ease;
-    }
-    input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
-
-    button {
-      margin-top: 1.1rem; width: 100%; padding: .78rem 1rem; font-size: 1rem; font-weight: 600;
-      color: var(--accent-ink); background: var(--accent); border: none; border-radius: 10px;
-      cursor: pointer; transition: filter .15s ease;
-    }
-    button:hover { filter: brightness(1.08); }
-    button:disabled { opacity: .65; cursor: progress; }
-
-    #status { min-height: 1.25rem; margin: .7rem 0 0; font-size: .9rem; }
-    #status.error { color: var(--danger); }
-    #status.ok { color: var(--accent); }
-
-    .rows { display: flex; flex-direction: column; }
-    .row {
-      display: flex; justify-content: space-between; gap: 1rem;
-      padding: .72rem 0; border-bottom: 1px solid var(--border);
-    }
-    .row:last-child { border-bottom: none; }
-    .row .name { font-weight: 600; }
-    .row .value { color: var(--muted); text-align: right; }
-    .muted { color: var(--muted); }
-    .empty { color: var(--muted); text-align: center; padding: 1.1rem 0; }
-
-    footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 1.5rem; }
+    /* Page-local layout. The sectioned-card component now lives in brand.css. */
+    .container { max-width: 560px; }
+    .page-head { margin-bottom: 22px; }
+    .page-head h1 { margin-bottom: 6px; }
+    .count { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .count-label { font-size: 0.8rem; color: var(--gg-text-muted); margin-top: 4px; }
+    .page-foot { margin-top: 20px; text-align: center; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header class="hero">
-      <span class="badge">GONG</span>
-      <h1>Bonjour&nbsp;👋</h1>
-      <p class="subtitle">Bienvenue sur <?= appName ?> — votre application est en ligne.</p>
+  <!-- Shared header: logo | app name ............ signed-in Workspace user -->
+  <app-header app-name="<?= appName ?>"
+              user-name="<?= userName ?>"
+              user-email="<?= userEmail ?>"></app-header>
+
+  <main class="container">
+    <header class="page-head">
+      <h1><?= appName ?></h1>
+      <p class="lead">Squelette de démarrage. Remplacez cette page par votre application.</p>
     </header>
 
-    <section class="card">
-      <h2>Ajouter une entrée</h2>
-      <form id="entry-form">
-        <label for="name">Nom</label>
-        <input id="name" placeholder="Ex. Dupont" required autocomplete="off">
-        <label for="value">Valeur</label>
-        <input id="value" placeholder="Ex. 42" required autocomplete="off">
-        <button type="submit" id="submit-btn">Enregistrer</button>
-        <p id="status"></p>
-      </form>
+    <section class="card sectioned">
+      <div class="card-head">
+        <h2>État</h2>
+      </div>
+      <div class="card-body">
+        <div>
+          <div class="count" id="count">0</div>
+          <div class="count-label">entrées enregistrées dans le Sheet</div>
+        </div>
+      </div>
+      <div class="card-foot">
+        <button class="btn primary" id="add-btn">Ajouter une entrée de test</button>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>Entrées enregistrées</h2>
-      <div id="list" class="muted">Chargement…</div>
-    </section>
+    <footer class="page-foot"><span class="muted small"><?= appVersion ?></span></footer>
+  </main>
 
-    <footer>Version <?= appVersion ?></footer>
-  </div>
+  <!-- Notifications: fixed-position toasts, so they never push the layout. -->
+  <div class="toast-region" id="toast-region" aria-live="polite"></div>
+
+  <!-- Shared header web component (defines <app-header>). -->
+  <?!= include('Header') ?>
 
   <script>
-    var listEl = document.getElementById('list');
-    var statusEl = document.getElementById('status');
-    var form = document.getElementById('entry-form');
-    var submitBtn = document.getElementById('submit-btn');
+    var addBtn = document.getElementById('add-btn');
+    var countEl = document.getElementById('count');
+    var toastRegion = document.getElementById('toast-region');
 
-    // getData() returns a JSON STRING (see the comment in Code.js): google.script.run drops
-    // raw arrays of objects to null in the browser, so we always JSON.parse the response.
-    function loadData() {
+    // Toast: transient and fixed-position, so a notification never pushes the layout.
+    function showToast(message, kind) {
+      var t = document.createElement('div');
+      t.className = 'toast ' + kind;
+      t.textContent = message;
+      toastRegion.appendChild(t);
+      requestAnimationFrame(function () { t.classList.add('show'); });
+      setTimeout(function () {
+        t.classList.remove('show');
+        setTimeout(function () { t.remove(); }, 250);
+      }, 2800);
+    }
+
+    // getState()/addTestEntry() return a JSON STRING (google.script.run drops raw objects to
+    // null in the browser). Always JSON.parse the response. See Code.js / AGENTS.md.
+    function render(json) {
+      countEl.textContent = JSON.parse(json).count;
+    }
+    function loadState() {
+      google.script.run
+        .withSuccessHandler(render)
+        .withFailureHandler(function (err) { showToast('Erreur : ' + err.message, 'error'); })
+        .getState();
+    }
+
+    addBtn.addEventListener('click', function () {
+      addBtn.disabled = true;
+      addBtn.textContent = 'Enregistrement...';
       google.script.run
         .withSuccessHandler(function (json) {
-          var rows = JSON.parse(json);
-          if (!rows.length) {
-            listEl.className = '';
-            listEl.innerHTML = '<div class="empty">Aucune entrée pour l\'instant.</div>';
-            return;
-          }
-          listEl.className = 'rows';
-          listEl.innerHTML = rows.map(function (r) {
-            return '<div class="row"><span class="name">' + escapeHtml(r.name) +
-                   '</span><span class="value">' + escapeHtml(r.value) + '</span></div>';
-          }).join('');
+          render(json);
+          addBtn.disabled = false;
+          addBtn.textContent = 'Ajouter une entrée de test';
+          showToast('Entrée enregistrée.', 'success');
         })
         .withFailureHandler(function (err) {
-          showStatus('Erreur de chargement : ' + err.message, 'error');
+          addBtn.disabled = false;
+          addBtn.textContent = 'Ajouter une entrée de test';
+          showToast('Erreur : ' + err.message, 'error');
         })
-        .getData();
-    }
-
-    form.addEventListener('submit', function (ev) {
-      ev.preventDefault();
-      var payload = {
-        name: document.getElementById('name').value,
-        value: document.getElementById('value').value
-      };
-      setBusy(true);
-      showStatus('', '');
-      google.script.run
-        .withSuccessHandler(function () {
-          form.reset();
-          setBusy(false);
-          showStatus('Enregistré ✓', 'ok');
-          loadData();
-        })
-        .withFailureHandler(function (err) {
-          setBusy(false);
-          showStatus('Erreur : ' + err.message, 'error');
-        })
-        .saveEntry(payload);
+        .addTestEntry();
     });
 
-    function setBusy(b) {
-      submitBtn.disabled = b;
-      submitBtn.textContent = b ? 'Enregistrement…' : 'Enregistrer';
-    }
-    function showStatus(msg, kind) {
-      statusEl.textContent = msg;
-      statusEl.className = kind || '';
-    }
-    // Minimal HTML escaping so text typed by users can't break the markup.
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, function (c) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-      });
-    }
-
-    loadData();
+    loadState();
   </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
-# Système de design — Outils internes GONG
+# Système de design - Outils internes GONG
 
 Base visuelle partagée par les web-apps internes (Apps Script). Objectif : des outils
-qui se ressemblent, **sobres**, lisibles, et cohérents d'une app à l'autre — sans effort
+qui se ressemblent, **sobres**, lisibles, et cohérents d'une app à l'autre - sans effort
 de design à chaque projet.
 
 **Fichiers**
@@ -23,7 +23,7 @@ Pour voir le rendu : ouvrez **`showcase.html`** dans un navigateur.
    les alertes, statuts et validations de formulaire. Jamais en décoration.
 3. **Gris doux, pas blanc pur.** Le fond est un gris clair reposant (`--gg-bg`), les cartes
    légèrement plus claires. Moins de fatigue visuelle sur écran.
-4. **Un seul thème pour l'instant** (clair). Pas de sélecteur clair/sombre — on garde simple.
+4. **Un seul thème pour l'instant** (clair). Pas de sélecteur clair/sombre - on garde simple.
    Un thème sombre pourra être réintroduit plus tard (tout passe par les tokens).
 5. **Responsive par défaut.** Desktop, tablette, mobile. Contenu large (tableaux) qui défile
    dans son conteneur, jamais toute la page.
@@ -52,7 +52,7 @@ Toujours passer par les variables, jamais de valeur en dur.
 Échelle : `h1` 1.7rem/700 · `h2` 1.15rem/600 · `h3` 1rem/600 · `h4` 0.9rem/600 ·
 corps 1rem/1.5 · `.lead` 1.05rem atténué · `.small` 0.85rem · `.eyebrow`/`.label`
 0.74rem capitales espacées. Titres en `letter-spacing:-0.02em` + `text-wrap:balance`.
-Largeur de lecture confortable ~65–70 caractères (conteneur ≤ 720 px).
+Largeur de lecture confortable ~65-70 caractères (conteneur ≤ 720 px).
 
 ## 4. Espacement & layout
 
@@ -86,8 +86,8 @@ droite, **l'utilisateur connecté** (toujours affiché).
 <link rel="stylesheet" href="brand.css" />
 <script src="header.js" defer></script>
 <app-header app-name="Suivi livraisons"
-            user-name="Jean Dupont"
-            user-email="jean.dupont@gong-galaxy.com"></app-header>
+            user-name="John Doe"
+            user-email="john.doe@gong-galaxy.com"></app-header>
 ```
 
 **Afficher l'utilisateur Google Workspace (dans une web-app Apps Script).** Le backend

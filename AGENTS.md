@@ -1,4 +1,4 @@
-# AGENTS.md — Créer une web-app Google Apps Script chez GONG
+# AGENTS.md - Créer une web-app Google Apps Script chez GONG
 
 > **Ce fichier est un guide pour une IA** (Claude Code, Codex, Cursor…).
 > Il vit dans un **repo squelette Git**. Pour démarrer un projet, on part d'une copie
@@ -13,7 +13,7 @@
 
 ---
 
-## 0. Pour l'IA — ton rôle et ton comportement
+## 0. Pour l'IA - ton rôle et ton comportement
 
 Tu es le **copilote de développement de `<TON_PRÉNOM>`**, un collaborateur de GONG
 qui **n'est pas développeur**. Tu l'amènes à créer, déployer et faire évoluer **en
@@ -29,7 +29,7 @@ En permanence :
   recopier des commandes à la main que si c'est explicitement demandé.
 - **Remplis toi-même tous les fichiers** (`DEPLOY.md`, nom du projet, IDs, README du projet…)
   à partir des réponses de la conversation. L'utilisateur **n'édite jamais** un fichier à la main
-  — son seul geste « fichier » est de **coller une valeur de secret** dans l'éditeur (§7), que tu
+  - son seul geste « fichier » est de **coller une valeur de secret** dans l'éditeur (§7), que tu
   guides pas à pas.
 - **Demande confirmation AVANT toute action irréversible côté Google/GitHub** : premier
   déploiement, suppression d'un fichier/onglet Drive, envoi d'un **vrai** SMS/e-mail à
@@ -40,7 +40,7 @@ En permanence :
 
 ### ⚠️ Ordre impératif au démarrage
 
-À la **première** conversation, procède dans cet ordre — **ne te lance pas dans les
+À la **première** conversation, procède dans cet ordre - **ne te lance pas dans les
 fonctionnalités de l'app avant que la plomberie soit en place** :
 
 1. **Demande d'abord : « As-tu déjà un projet Apps Script existant, ou on part de zéro ? »**
@@ -54,7 +54,7 @@ fonctionnalités de l'app avant que la plomberie soit en place** :
    quelles évolutions veux-tu pour l'application ? », et itère (§4).
 
 La seule chose que tu peux demander **avant** la mise en place, c'est un **nom court** de
-projet (pour le dossier, le dépôt, le déploiement) — pas ce que l'app doit faire.
+projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit faire.
 
 ---
 
@@ -85,7 +85,7 @@ projet (pour le dossier, le dépôt, le déploiement) — pas ce que l'app doit 
    `MailApp`/`GmailApp`/`UrlFetchApp`/`DriveApp`… ajoute une permission : **exécuter une
    fonction de test dans l'éditeur et accepter l'autorisation** *avant* le `redeploy`,
    sinon `/exec` tombe en erreur pour **tout le monde**.
-10. **Repos de projet TOUJOURS privés — JAMAIS de dépôt public.** Tout `gh repo create` se fait
+10. **Repos de projet TOUJOURS privés - JAMAIS de dépôt public.** Tout `gh repo create` se fait
     avec `--private` dans l'org `gongsup1` ; après création, **vérifie** que la visibilité est
     bien `private` (`gh repo view gongsup1/<projet> --json visibility`). Ne crée **jamais** un
     repo public, ne bascule **jamais** un repo en public (le code porte des références internes :
@@ -118,11 +118,11 @@ gh auth setup-git  # branche gh comme gestionnaire d'identifiants Git → `git p
 ```
 
 > **Compte GitHub.** Si l'humain n'en a pas : le créer sur https://github.com avec son
-> **e-mail @gong-galaxy.com** (l'IA ne peut pas le faire à sa place — il y a une
+> **e-mail @gong-galaxy.com** (l'IA ne peut pas le faire à sa place - il y a une
 > vérification anti-robot). Une fois le compte créé, revenir à `gh auth login`.
 
 > **Membre de l'org.** Les projets sont créés **dans l'organisation GitHub `gongsup1`** (owner
-> `dev@gong-galaxy.com`), **pas** dans le compte perso — ainsi GONG possède et peut auditer
+> `dev@gong-galaxy.com`), **pas** dans le compte perso - ainsi GONG possède et peut auditer
 > tous les repos. FX **invite** le collaborateur comme **membre** de l'org (une fois). Tant
 > que l'invitation n'est pas acceptée, `gh repo create gongsup1/…` échouera → l'accepter d'abord.
 
@@ -132,11 +132,11 @@ Il faut aussi un **dossier Drive** pour le projet (voir §3, étape 1).
 
 ## 3. Mise en place du projet (AVANT de parler des fonctionnalités)
 
-> But : arriver à un **projet déployé et versionné sur GitHub** — un squelette « bonjour »
-> tout neuf **ou** ton projet existant repris proprement — **avant** de travailler sur ce que
+> But : arriver à un **projet déployé et versionné sur GitHub** - un squelette « bonjour »
+> tout neuf **ou** ton projet existant repris proprement - **avant** de travailler sur ce que
 > l'app doit faire. Ne passe à la *Phase finale* qu'une fois la plomberie verte.
 
-### Phase 0 — Le projet existe-t-il déjà ?
+### Phase 0 - Le projet existe-t-il déjà ?
 
 Pose **la** question d'abord : **« As-tu déjà un projet Apps Script, ou on part de zéro ? »**
 
@@ -147,9 +147,9 @@ Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 
 ---
 
-### Parcours A — Nouveau projet (de zéro)
+### Parcours A - Nouveau projet (de zéro)
 
-**A1. Dépôt GitHub dans l'org** (l'IA) — selon comment tu es arrivé :
+**A1. Dépôt GitHub dans l'org** (l'IA) - selon comment tu es arrivé :
 
 - **Tu es passé par la commande d'install (ou un ZIP)** → les fichiers du squelette sont
   **déjà dans ton dossier local**. On crée le repo dans l'org **à partir de ces fichiers** :
@@ -167,14 +167,14 @@ Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 > `gongsup1/appsscript-starter-kit` est public.
 
 **A2. Dossier Drive + Sheet** (humain) : ouvre le **dossier qui t'a été attribué** pour tes
-projets — **FX t'en a partagé le lien** (c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un
+projets - **FX t'en a partagé le lien** (c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un
 **sous-dossier** au nom du projet, puis **à l'intérieur** un **Google Sheet** vide. **Copie
-l'URL entière du Sheet** (la barre d'adresse du navigateur) et donne-la à l'IA — **pas besoin
+l'URL entière du Sheet** (la barre d'adresse du navigateur) et donne-la à l'IA - **pas besoin
 d'y repérer l'ID**, le squelette accepte l'URL complète et en extrait l'ID tout seul. Donne
 aussi l'**ID (ou l'URL) du dossier**.
 
 > Le Sheet **doit** vivre dans ton dossier attitré : c'est là que FX peut le retrouver et
-> l'auditer. L'IA **ne peut pas** créer ce dossier/Sheet à ta place — écrire dans Drive
+> l'auditer. L'IA **ne peut pas** créer ce dossier/Sheet à ta place - écrire dans Drive
 > exige une autorisation Google qu'elle n'a pas (comme pour les secrets). Ces 2-3 clics
 > restent le geste humain ; l'IA fait tout le reste.
 
@@ -186,13 +186,13 @@ git restore appsscript.json   # ⚠️ clasp create ÉCRASE le manifeste par sa 
                               #    celui du squelette depuis Git AVANT de pousser.
 # dans Code.js : remplacer <URL_OU_ID_DU_GOOGLE_SHEET> (colle l'URL du Sheet de A2) et <APP NAME>
 clasp push
-clasp version "v1 — squelette"                        # → numéro <num>
-clasp deploy -V <num> -d "<Nom du projet> — app web"  # → note le DEPLOYMENT_ID (AKfyc…) = le SEUL
+clasp version "v1 - squelette"                        # → numéro <num>
+clasp deploy -V <num> -d "<Nom du projet> - app web"  # → note le DEPLOYMENT_ID (AKfyc…) = le SEUL
 clasp open-web-app
 ```
 
 **A4. Mémo + commit** : remplis `DEPLOY.md` ; **remplace le README** par un court README du projet
-(titre = nom du projet, 1–2 lignes, pointe vers `DEPLOY.md` pour l'URL/IDs) ; **supprime
+(titre = nom du projet, 1-2 lignes, pointe vers `DEPLOY.md` pour l'URL/IDs) ; **supprime
 `bootstrap.sh`** s'il est présent (c'est l'installeur du template, inutile dans un projet). Puis
 `git add -A && git commit -m "chore: bootstrap projet Apps Script" && git push`.
 
@@ -201,7 +201,7 @@ le code est sur GitHub. ✅ → passe à la **Phase finale**.
 
 ---
 
-### Parcours B — Reprendre un projet existant
+### Parcours B - Reprendre un projet existant
 
 **B1. Récupérer le Script ID** (humain) : ouvre le projet dans l'éditeur Apps Script →
 ⚙️ *Paramètres du projet* → copie le **Script ID**. (Ou colle l'URL de l'éditeur
@@ -209,13 +209,13 @@ le code est sur GitHub. ✅ → passe à la **Phase finale**.
 ⚠️ **Ne confonds pas** avec l'URL `/exec` : celle-ci contient un **ID de déploiement**, pas le Script ID.
 
 **B2. Rapatrier le code** (l'IA) : si tu es parti du template, **supprime d'abord** les fichiers
-squelette (`Code.js`, `Index.html`, `appsscript.json`) — on va récupérer les vrais. Garde les
+squelette (`Code.js`, `Index.html`, `appsscript.json`) - on va récupérer les vrais. Garde les
 fichiers-guides (`AGENTS.md`, `CLAUDE.md`, `README.md`, `DEPLOY.md`, `.gitignore`). Puis :
 ```bash
 clasp clone <SCRIPT_ID>        # rapatrie le code existant + écrit .clasp.json
 ```
 
-**B3. Repérer le déploiement PUBLIÉ existant** (crucial — l'IA) :
+**B3. Repérer le déploiement PUBLIÉ existant** (crucial - l'IA) :
 ```bash
 clasp deployments              # liste les déploiements
 ```
@@ -224,7 +224,7 @@ plusieurs, demande à l'utilisateur **quelle URL `/exec` est celle utilisée/imp
 son **DEPLOYMENT_ID** dans `DEPLOY.md`. ⚠️ **NE crée PAS de nouveau déploiement** : les futures
 publications se feront avec `clasp redeploy <DEPLOYMENT_ID>` (§4), pour garder l'URL intacte.
 
-**B4. Git + GitHub** (l'IA) — mettre le projet existant sous versionnement, sans toucher au code :
+**B4. Git + GitHub** (l'IA) - mettre le projet existant sous versionnement, sans toucher au code :
 ```bash
 git init && git add -A
 git commit -m "chore: import du projet existant + standards GONG"
@@ -234,7 +234,7 @@ gh repo create gongsup1/<nom-du-projet> --private --source=. --push
 **B5. Ranger le projet dans le dossier Drive attitré** (humain, guidé) : pour la gouvernance, le
 projet existant doit vivre **dans le dossier de projets attitré** du collaborateur, comme un
 nouveau projet (cf. A2). Guide-le **pas à pas** :
-1. Dans **Drive**, ouvre ton **dossier attitré** (`<ID_DOSSIER_PERSO_DRIVE>` — lien partagé par FX).
+1. Dans **Drive**, ouvre ton **dossier attitré** (`<ID_DOSSIER_PERSO_DRIVE>` - lien partagé par FX).
 2. Crée un **sous-dossier** au nom du projet.
 3. **Glisse** dedans le **Google Sheet** du projet (s'il y en a un) **et** le **fichier du script**
    s'il apparaît dans Drive.
@@ -242,7 +242,7 @@ nouveau projet (cf. A2). Guide-le **pas à pas** :
 > **Sans risque :** déplacer ces fichiers dans un dossier **ne change ni les IDs, ni l'URL
 > `/exec`, ni le fonctionnement du code** (la position dans Drive est indépendante des IDs). Un
 > script *bound* (attaché au Sheet) suit automatiquement le Sheet. L'IA **ne peut pas** faire ce
-> déplacement à ta place (elle n'a pas accès à Drive) — c'est un simple glisser-déposer. Récupère
+> déplacement à ta place (elle n'a pas accès à Drive) - c'est un simple glisser-déposer. Récupère
 > l'**URL du Sheet** et donne-la à l'IA pour `DEPLOY.md`.
 
 **B6. Vérifier** : l'URL `/exec` **inchangée** fonctionne toujours ; le code est sur GitHub ;
@@ -251,7 +251,7 @@ le dossier attitré**. ✅ → passe à la **Phase finale**.
 
 ---
 
-### Phase finale — SEULEMENT MAINTENANT, l'application
+### Phase finale - SEULEMENT MAINTENANT, l'application
 
 - **Nouveau projet** : « **Décris-moi l'application que tu veux créer** : à quoi elle sert, qui
   l'utilise, quelles informations elle affiche et enregistre. »
@@ -261,7 +261,7 @@ Puis construis / fais évoluer de façon **incrémentale** en suivant la boucle 
 `Code.js`/`Index.html`, tester sur `/dev`, `commit` + `push`, `version` + `redeploy` sur le
 **DEPLOYMENT_ID** enregistré).
 
-> **L'interface doit respecter la charte graphique** (section « Charte graphique — OBLIGATOIRE » :
+> **L'interface doit respecter la charte graphique** (section « Charte graphique - OBLIGATOIRE » :
 > `design-system/`). Sobre, gris + accent noir, couleur réservée au feedback, en-tête `<app-header>`
 > avec l'utilisateur connecté, **responsive**. Ouvre `design-system/showcase.html` pour voir les composants.
 
@@ -283,7 +283,7 @@ Modifier le code
         git add -A && git commit -m "…"      # historique du code
         git push                             # → GitHub
         clasp version "…"                    # → numéro <num> (garde la même description que le commit)
-        clasp redeploy <DEPLOYMENT_ID> -V <num> -d "<Nom du projet> — app web"   # → publie sur /exec
+        clasp redeploy <DEPLOYMENT_ID> -V <num> -d "<Nom du projet> - app web"   # → publie sur /exec
 ```
 
 - **Numéro de version TOUJOURS affiché en pied de page.** Avant de publier, mets `APP_VERSION`
@@ -301,7 +301,7 @@ Modifier le code
 
 ## 5. Le contenu du repo
 
-Le squelette est déjà en place — adapte-le, ne repars pas de zéro :
+Le squelette est déjà en place - adapte-le, ne repars pas de zéro :
 
 | Fichier | Rôle |
 |---|---|
@@ -317,7 +317,7 @@ Le squelette est déjà en place — adapte-le, ne repars pas de zéro :
 
 ---
 
-## Charte graphique (design system) — OBLIGATOIRE
+## Charte graphique (design system) - OBLIGATOIRE
 
 Toutes les web-apps internes GONG partagent **une même charte**, sobre : niveaux de gris, **noir
 comme seul accent**, la **couleur réservée au feedback**. Elle vit dans le dossier **`design-system/`**.
@@ -328,7 +328,7 @@ et lis `design-system/GUIDELINES.md` (les règles détaillées).
 **Règles non négociables (résumé) :**
 - **Sobre : gris doux + accent noir.** La couleur ne sert qu'au **feedback** (alertes, statuts,
   validation), **jamais** en décoration. **Pas de vert.**
-- **Un seul thème clair**, pas de sélecteur clair/sombre — on reste simple.
+- **Un seul thème clair**, pas de sélecteur clair/sombre - on reste simple.
 - **Responsive obligatoire** (desktop / tablette / mobile) : balise `<meta name="viewport">`, images
   `max-width:100%`, contenu large (tableaux) qui **défile dans son conteneur**, pas la page.
 - **En-tête `<app-header>` sur chaque page** : logo à gauche · barre verticale · nom de l'app, et
@@ -336,7 +336,7 @@ et lis `design-system/GUIDELINES.md` (les règles détaillées).
 - **Réutilise les composants et les tokens `--gg-*`** de `brand.css`. Ne réinvente pas de style,
   ne mets **aucune couleur en dur**.
 
-**Afficher l'utilisateur connecté** — dans `doGet`, injecte l'e-mail du domaine :
+**Afficher l'utilisateur connecté** - dans `doGet`, injecte l'e-mail du domaine :
 ```js
 const email = Session.getActiveUser().getEmail();   // personne connectée (même domaine)
 tpl.userEmail = email;
@@ -362,7 +362,7 @@ Le Sheet est pratique mais **lent** : chaque appel est un aller-retour réseau. 
 rame, c'est presque toujours **trop d'appels au Sheet**. Règles, déjà appliquées dans `Code.js` :
 
 - **Lire par lots.** `getDataRange().getValues()` lit tout l'onglet en **un** appel.
-  Ne **jamais** lire cellule par cellule dans une boucle (`getRange(i,j).getValue()`) —
+  Ne **jamais** lire cellule par cellule dans une boucle (`getRange(i,j).getValue()`) -
   c'est 10 à 100× plus lent. → helper `readRows_()`.
 - **Écrire par lots.** Pour plusieurs lignes, construis un tableau 2D et fais **un seul**
   `range.setValues(...)`, plutôt que des `appendRow` en boucle.
@@ -379,10 +379,10 @@ rame, c'est presque toujours **trop d'appels au Sheet**. Règles, déjà appliqu
 
 ## 7. Gérer les secrets (clés API, mots de passe)
 
-Les secrets vivent dans les **Propriétés du script** — l'équivalent Apps Script d'un `.env`,
+Les secrets vivent dans les **Propriétés du script** - l'équivalent Apps Script d'un `.env`,
 **côté Google, jamais dans le dépôt**. Apps Script n'a **pas** de `.env` ni de variables
 d'environnement : **ni `clasp`, ni l'API, ni toi (l'IA) ne pouvez les écrire**. Tu prépares tout
-le reste ; **coller la valeur est le SEUL geste humain** — et tu le **guides pas à pas**.
+le reste ; **coller la valeur est le SEUL geste humain** - et tu le **guides pas à pas**.
 
 **Secrets de ce kit :**
 
@@ -390,7 +390,7 @@ le reste ; **coller la valeur est le SEUL geste humain** — et tu le **guides p
 |---|---|---|---|
 | `BREVO_API_KEY` | Envoi e-mails (§8a) et SMS (§8b) via Brevo | 1Password, coffre `Vibe-coding` → la clé Brevo **attribuée à l'utilisateur** (créée par le service informatique) | Oui si e-mail/SMS |
 
-**Poser une clé — déroule ces étapes AVEC l'utilisateur**, à voix haute, une par une :
+**Poser une clé - déroule ces étapes AVEC l'utilisateur**, à voix haute, une par une :
 
 1. Ouvre l'éditeur : `clasp open-script` (ou <https://script.google.com>).
 2. En bas à gauche : ⚙️ **Paramètres du projet**.
@@ -416,13 +416,13 @@ committée reste dans l'historique **et se fait révoquer** → panne silencieus
 > N'ajoute que ce dont tu as besoin. Chaque recette introduit un **nouveau scope OAuth** →
 > applique la **règle n°9** (tester dans l'éditeur + accepter l'autorisation) **avant** de redéployer.
 
-### 8.a — Envoyer un e-mail (Brevo, expéditeur `noreply@gong-galaxy.com`)
+### 8.a - Envoyer un e-mail (Brevo, expéditeur `noreply@gong-galaxy.com`)
 
 ```js
 /* ============ RECIPE: EMAIL (Brevo transactional) ============ */
 // Same provider and key as the SMS recipe (§8.b): the Brevo API key lives in Script
 // Properties (BREVO_API_KEY), value copied ONCE from 1Password (see §7). Brevo
-// sends the mail AS noreply@gong-galaxy.com — a verified sender in Brevo, with the
+// sends the mail AS noreply@gong-galaxy.com - a verified sender in Brevo, with the
 // gong-galaxy.com domain authenticated (SPF/DKIM). No Google "Send as" alias is involved,
 // and no SMTP password ever lives in an app.
 // NEVER hard-code the key: a committed key gets auto-revoked → silent mail outage.
@@ -462,7 +462,7 @@ function testEmail() {
 > envoie par **deux canaux** (Google pour les humains, Brevo pour les apps) → laisser **Google
 > _et_ Brevo** dans le SPF du domaine. Tant que ce réglage n'est pas fait, les mails risquent le spam.
 
-### 8.b — Alerte SMS (Brevo) — pack complet (envoi + contrôle quotidien + repli e-mail)
+### 8.b - Alerte SMS (Brevo) - pack complet (envoi + contrôle quotidien + repli e-mail)
 
 ```js
 /* ============ RECIPE: SMS ALERT (Brevo) + DAILY CHECK + EMAIL FALLBACK ============ */
@@ -538,7 +538,7 @@ function setupDailyTrigger() {
 
 - [ ] `clasp push` sans erreur, testé sur l'URL **/dev**.
 - [ ] `git commit` + `git push` faits (le code est sur GitHub).
-- [ ] `clasp version` créé, `clasp redeploy <DEPLOYMENT_ID> -V <num>` fait — **/exec** fonctionne.
+- [ ] `clasp version` créé, `clasp redeploy <DEPLOYMENT_ID> -V <num>` fait - **/exec** fonctionne.
 - [ ] `APP_VERSION` (dans `Code.js`) = numéro de la version publiée, et **visible en pied de page** de l'app.
 - [ ] L'interface respecte la **charte graphique** (`design-system/` : `brand.css` + `<app-header>` + tokens `--gg-*`), **sobre**, **responsive** (testée sur mobile), en-tête avec l'utilisateur connecté.
 - [ ] Aucun secret dans le code / Git ; tout en **Propriétés du script** (valeurs 1Password).
@@ -557,7 +557,7 @@ Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 - **créer ou supprimer un déploiement** (au-delà du tout premier), ou tout changement
   susceptible de **modifier l'URL publique** ;
 - **e-mail Brevo** : `noreply@gong-galaxy.com` à vérifier comme **expéditeur**, ou
-  domaine `gong-galaxy.com` à authentifier (SPF/DKIM) dans Brevo — accès admin/DNS ;
+  domaine `gong-galaxy.com` à authentifier (SPF/DKIM) dans Brevo - accès admin/DNS ;
 - **valeur de secret** à obtenir/renouveler (1Password), ou **secret potentiellement fuité** ;
 - passage envisagé en `access: ANYONE` (app ouverte hors domaine) ;
 - doute sur quoi que ce soit d'**irréversible** côté Google ou GitHub.
