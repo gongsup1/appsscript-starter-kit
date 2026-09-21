@@ -2,6 +2,10 @@
 .clasprc.json
 .clasp-*.json
 
+# Autorisations de commandes Claude Code propres à CE poste : ne jamais les partager
+# (un repo repris hériterait sinon d'autorisations comme "gh repo *" sans confirmation).
+.claude/settings.local.json
+
 # Dépendances Node
 node_modules/
 

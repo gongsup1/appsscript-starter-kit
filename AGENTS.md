@@ -49,6 +49,7 @@ fonctionnalités de l'app avant que la plomberie soit en place** :
    - **Projet existant** (déjà en ligne, peut-être avec une URL imprimée) → **Parcours B**
      (§3) : tu récupères son Script ID/URL et tu mets Git/GitHub + le versionnement en place
      **autour** du projet existant, sans casser son URL publique.
+   - **Projet déjà sur GitHub** dans `gongsup1` (nouveau Mac, reprise du projet d'un collègue) → **Parcours C** (§3) : tu récupères le code depuis GitHub, sans rien créer.
 2. Déroule **toute la mise en place** du parcours choisi, jusqu'à un **projet déployé et
    versionné sur GitHub** (squelette neuf, ou projet existant repris proprement).
 3. **Seulement alors**, pose la question fonctionnelle (§3, *Phase finale*) : « décris /
@@ -135,7 +136,9 @@ git config --global user.email || git config --global user.email "prenom.nom@gon
 > **Membre de l'org.** Les projets sont créés **dans l'organisation GitHub `gongsup1`** (owner
 > `dev@gong-galaxy.com`), **pas** dans le compte perso - ainsi GONG possède et peut auditer
 > tous les repos. FX **invite** le collaborateur comme **membre** de l'org (une fois). Tant
-> que l'invitation n'est pas acceptée, `gh repo create gongsup1/…` échouera → l'accepter d'abord.
+> que l'invitation n'est pas acceptée, `gh repo create gongsup1/…` échouera → l'accepter d'abord
+> (lien dans l'e-mail d'invitation, ou <https://github.com/orgs/gongsup1/invitation>). Pour vérifier :
+> `gh api user/memberships/orgs/gongsup1 --jq .state` doit répondre `active`.
 
 Il faut aussi un **dossier Drive** pour le projet (voir §3, étape 1).
 
@@ -152,7 +155,8 @@ Il faut aussi un **dossier Drive** pour le projet (voir §3, étape 1).
 Pose **la** question d'abord : **« As-tu déjà un projet Apps Script, ou on part de zéro ? »**
 
 - **De zéro** → **Parcours A**.
-- **Projet déjà existant** (déjà en ligne, peut-être avec une URL imprimée) → **Parcours B**.
+- **Projet Apps Script déjà existant, pas encore sur GitHub** (déjà en ligne, peut-être avec une URL imprimée) → **Parcours B**.
+- **Projet déjà sur GitHub** dans l'org `gongsup1` (nouveau Mac, reprise du projet d'un collègue) → **Parcours C**. Dans le doute, vérifie : si `gh repo view gongsup1/<nom-du-projet>` répond, c'est le Parcours C (ne crée **jamais** un second dépôt).
 
 Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraisons`).
 
@@ -165,7 +169,7 @@ Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 - **Tu es passé par la commande d'install (ou un ZIP)** → les fichiers du squelette sont
   **déjà dans ton dossier local**. On crée le repo dans l'org **à partir de ces fichiers** :
   ```bash
-  git init && git add -A && git commit -m "chore: squelette initial"
+  git init -b main && git add -A && git commit -m "chore: squelette initial"
   gh repo create gongsup1/<nom-du-projet> --private --source=. --push
   ```
 - **Terminal nu, sans les fichiers** → on instancie le template directement :
@@ -218,6 +222,7 @@ le code est sur GitHub. ✅ → passe à la **Phase finale**.
 ⚙️ *Paramètres du projet* → copie le **Script ID**. (Ou colle l'URL de l'éditeur
 `https://script.google.com/…/projects/`**`<SCRIPT_ID>`**`/edit`.)
 ⚠️ **Ne confonds pas** avec l'URL `/exec` : celle-ci contient un **ID de déploiement**, pas le Script ID.
+Pré-requis : l'utilisateur doit être **éditeur** du script **et** du Google Sheet associé (sinon `clasp clone` échoue). S'il ne l'est pas, le propriétaire doit les lui partager en « Éditeur » ; à défaut, renvoie vers FX.
 
 **B2. Rapatrier le code** (l'IA) : si tu es parti du template, **supprime d'abord** les fichiers
 squelette (`Code.js`, `Index.html`, `appsscript.json`) - on va récupérer les vrais. Garde les
@@ -239,7 +244,7 @@ publications se feront avec `clasp redeploy <DEPLOYMENT_ID>` (§4), pour garder 
 
 **B4. Git + GitHub** (l'IA) - mettre le projet existant sous versionnement, sans toucher au code :
 ```bash
-git init && git add -A
+git init -b main && git add -A
 git commit -m "chore: import du projet existant + standards GONG"
 gh repo create gongsup1/<nom-du-projet> --private --source=. --push
 ```
@@ -261,6 +266,38 @@ nouveau projet (cf. A2). Guide-le **pas à pas** :
 **B6. Vérifier** : l'URL `/exec` **inchangée** fonctionne toujours ; le code est sur GitHub ;
 `DEPLOY.md` rempli (Script ID, **DEPLOYMENT_ID**, URL, Sheet URL/ID) ; le Sheet + le script sont **dans
 le dossier attitré**. ✅ → passe à la **Phase finale**.
+
+---
+
+### Parcours C - Reprendre un projet déjà sur GitHub
+
+Le projet a déjà son dépôt `gongsup1/<nom-du-projet>` (créé par le Parcours A ou B) et on le reprend sur un **nouveau Mac** ou **à la place d'un collègue**. On ne crée **rien** : ni dépôt, ni projet Apps Script, ni déploiement.
+
+**C1. Accès** (vérifié par l'IA, accordé par FX ou le propriétaire) : il faut un accès **en écriture** au dépôt, et être **éditeur** du script Apps Script et du Google Sheet (partage Drive). Vérifie le dépôt :
+```bash
+gh repo view gongsup1/<nom-du-projet> --json viewerPermission   # doit répondre WRITE ou ADMIN
+```
+`READ` ou erreur → arrête-toi et renvoie vers FX (§11) : il ajoute la personne au dépôt (*Settings* → *Collaborators and teams*).
+
+**C2. Récupérer le code** (l'IA) : le dossier ne contient que le squelette de la commande d'install ; on le remplace par le code du projet.
+```bash
+git init -b main
+git remote add origin https://github.com/gongsup1/<nom-du-projet>.git
+git fetch origin
+git reset --hard origin/main   # remplace le squelette par le code du projet
+git clean -fd                  # retire les fichiers du squelette absents du projet
+git branch -u origin/main
+```
+⚠️ `reset --hard` et `clean -fd` effacent des fichiers locaux : **uniquement** dans un dossier fraîchement créé par la commande d'install (vérifié à l'étape 0), jamais dans un dossier où quelqu'un a travaillé.
+
+**C3. Rebrancher Apps Script** (l'IA) : `.clasp.json` (le Script ID) vient du dépôt. Vérifie que GitHub et Apps Script contiennent le même code (quelqu'un a pu faire `clasp push` sans committer) :
+```bash
+clasp pull     # récupère le code actuellement dans Apps Script
+git status     # des différences ?
+```
+S'il y en a, montre-les à l'utilisateur, puis `git add -A && git commit -m "chore: resynchronisation avec Apps Script" && git push`, **avant** toute modification.
+
+**C4. Vérifier** : `DEPLOY.md` contient le **DEPLOYMENT_ID** (c'est lui qu'on continuera à `redeploy`, jamais un nouveau) ; `.claspignore` est présent s'il y a un dossier `design-system/` (sinon le remettre, §9). ✅ → passe à la **Phase finale**.
 
 ---
 
@@ -567,6 +604,7 @@ Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 - **e-mail** : besoin d'envoyer depuis une **adresse générique** (`noreply@`, adresse de service) plutôt que celle de l'utilisateur, ou volumes proches du quota Google (~1 500 destinataires par jour) ;
 - **valeur de secret** à obtenir/renouveler (1Password), ou **secret potentiellement fuité** ;
 - passage envisagé en `access: ANYONE` (app ouverte hors domaine) ;
+- **accès manquant** : invitation à l'org GitHub, droit d'écriture sur le dépôt d'un collègue (Parcours C), script ou Sheet non partagé en « Éditeur » ;
 - doute sur quoi que ce soit d'**irréversible** côté Google ou GitHub.
 
 ---
