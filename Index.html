@@ -13,6 +13,10 @@
     .count { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
     .count-label { font-size: 0.8rem; color: var(--gg-text-muted); margin-top: 4px; }
     .page-foot { margin-top: 20px; text-align: center; }
+    /* DEV banner: "view as" tools on one line, wrapping on mobile. */
+    .dev-banner { margin-bottom: 22px; }
+    .view-as { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .view-as input { flex: 1 1 220px; min-width: 0; }
   </style>
 </head>
 <body>
@@ -22,6 +26,21 @@
               user-email="<?= userEmail ?>"></app-header>
 
   <main class="container">
+<? if (isDev) { ?>
+    <!-- DEV ONLY: rendered only in the DEV project. The server enforces it again (requireDev_). -->
+    <section class="alert warning dev-banner" role="status">
+      <div>
+        <p class="alert-title">Environnement DEV</p>
+        <p class="alert-body">Pour tester : les notifications partent vers toi seul, les données sont celles du Sheet DEV.</p>
+        <div class="view-as">
+          <input type="email" id="view-as-input" placeholder="Voir en tant que : prenom.nom@gong-galaxy.com">
+          <button class="btn ghost" id="view-as-apply">Voir en tant que</button>
+          <button class="btn subtle" id="view-as-reset" hidden>Revenir à moi</button>
+        </div>
+      </div>
+    </section>
+<? } ?>
+
     <header class="page-head">
       <h1><?= appName ?></h1>
       <p class="lead">Squelette de démarrage. Remplacez cette page par votre application.</p>
@@ -37,12 +56,15 @@
           <div class="count-label">entrées enregistrées dans le Sheet</div>
         </div>
       </div>
+<? if (isDev) { ?>
+      <!-- DEV ONLY: test feature. addTestEntry() is refused server-side in PROD. -->
       <div class="card-foot">
         <button class="btn primary" id="add-btn">Ajouter une entrée de test</button>
       </div>
+<? } ?>
     </section>
 
-    <footer class="page-foot"><span class="muted small"><?= appVersion ?></span></footer>
+    <footer class="page-foot"><span class="muted small"><?= appVersion ?><? if (isDev) { ?> · DEV<? } ?></span></footer>
   </main>
 
   <!-- Notifications: fixed-position toasts, so they never push the layout. -->
@@ -52,9 +74,12 @@
   <?!= include('Header') ?>
 
   <script>
-    var addBtn = document.getElementById('add-btn');
     var countEl = document.getElementById('count');
     var toastRegion = document.getElementById('toast-region');
+
+    // "View as" e-mail (DEV only, empty otherwise). Passed as the FIRST argument of EVERY server
+    // call; the server ignores it in PROD (appUser_ in Env.js).
+    var VIEW_AS = '';
 
     // Toast: transient and fixed-position, so a notification never pushes the layout.
     function showToast(message, kind) {
@@ -71,16 +96,23 @@
 
     // getState()/addTestEntry() return a JSON STRING (google.script.run drops raw objects to
     // null in the browser). Always JSON.parse the response. See Code.js / AGENTS.md.
+    // The header shows the user the server resolved (the "view as" user in DEV).
     function render(json) {
-      countEl.textContent = JSON.parse(json).count;
+      var state = JSON.parse(json);
+      countEl.textContent = state.count;
+      var header = document.querySelector('app-header');
+      if (header && header.setUser) header.setUser({ name: state.user.name, email: state.user.email });
     }
     function loadState() {
       google.script.run
         .withSuccessHandler(render)
         .withFailureHandler(function (err) { showToast('Erreur : ' + err.message, 'error'); })
-        .getState();
+        .getState(VIEW_AS);
     }
+<? if (isDev) { ?>
 
+    // DEV ONLY: test button.
+    var addBtn = document.getElementById('add-btn');
     addBtn.addEventListener('click', function () {
       addBtn.disabled = true;
       addBtn.textContent = 'Enregistrement...';
@@ -96,8 +128,24 @@
           addBtn.textContent = 'Ajouter une entrée de test';
           showToast('Erreur : ' + err.message, 'error');
         })
-        .addTestEntry();
+        .addTestEntry(VIEW_AS);
     });
+
+    // DEV ONLY: "view as". Reloads the data as the typed user; "Revenir à moi" goes back.
+    var viewAsInput = document.getElementById('view-as-input');
+    var viewAsReset = document.getElementById('view-as-reset');
+    document.getElementById('view-as-apply').addEventListener('click', function () {
+      VIEW_AS = viewAsInput.value.trim();
+      viewAsReset.hidden = !VIEW_AS;
+      loadState();
+    });
+    viewAsReset.addEventListener('click', function () {
+      VIEW_AS = '';
+      viewAsInput.value = '';
+      viewAsReset.hidden = true;
+      loadState();
+    });
+<? } ?>
 
     loadState();
   </script>

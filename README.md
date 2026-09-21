@@ -21,16 +21,12 @@ L'ouverture passe par le lien `claude://code/new?folder=…&q=…` de l'app Clau
 
 > **Une seule règle** : pour **démarrer** (nouveau projet, ou projet existant pas encore sur ce Mac), la commande ci-dessus ; pour **continuer** un projet, l'app Claude → onglet **Code** → le projet est dans la liste (pas besoin du terminal).
 
-L'assistant suit **`AGENTS.md`** (chargé automatiquement, voir `CLAUDE.md`) et déroule tout :
-connexions, création du repo **dans l'org** (privé), projet Apps Script, branchement du Google
-Sheet, déploiement, puis itérations.
+L'assistant suit **`AGENTS.md`** (chargé automatiquement, voir `CLAUDE.md`) et déroule tout : connexions, création du repo **dans l'org** (privé), les **deux environnements DEV et PROD** (deux projets Apps Script, deux Google Sheets, un déploiement chacun), puis itérations : on publie en DEV, on teste, et la PROD suit sur demande.
 
 > **Sans la commande** (terminal déjà équipé) : `gh repo create gongsup1/<projet> --template
 > gongsup1/appsscript-starter-kit --private --clone`, ouvrir le dossier avec l'IA, même phrase.
 
-> **Projet Apps Script déjà existant ?** L'IA le reprend aussi (Parcours B d'`AGENTS.md`) :
-> import du code, mise sous Git dans l'org, et **migration dans ton dossier Drive attitré**,
-> **sans changer son URL publique**.
+> **Projet Apps Script déjà existant ?** L'IA le reprend aussi (Parcours B d'`AGENTS.md`, l'étape critique) : tout est **sauvegardé dans Git avant la moindre modification**, le projet actuel devient la PROD (même adresse, mêmes données) si des gens l'utilisent, un DEV est créé à côté, le code est remis aux bonnes pratiques **en DEV**, et la PROD ne change qu'une fois le DEV validé, avec retour arrière immédiat possible. Le design : migration vers la charte GONG ou maintien, au choix de l'utilisateur.
 
 **Le point d'entrée du travail de l'IA, c'est [`AGENTS.md`](./AGENTS.md).**
 
@@ -41,11 +37,12 @@ Sheet, déploiement, puis itérations.
 | [`AGENTS.md`](./AGENTS.md) | Le guide que suit l'IA (règles d'or, bootstrap, boucle d'itération, performance, recettes). |
 | [`CLAUDE.md`](./CLAUDE.md) | Une ligne (`@AGENTS.md`) : fait lire `AGENTS.md` à **Claude Code**, qui ne lit que `CLAUDE.md`. Source unique, partagée avec Codex. |
 | `appsscript.json` | Manifeste Apps Script (fuseau Paris, web-app, accès domaine). |
-| `Code.js` | Squelette back-end : sert l'app, lit/écrit le Sheet **par lots + cache + verrou**. |
-| `Index.html` | Squelette front mono-page. |
+| `Env.js` | **DEV / PROD** : identifie l'environnement (`ENV` = `'DEV'` ou `'PROD'`, calculé depuis l'ID du projet), ouvre le bon Sheet, réserve les tests et le « voir en tant que » au DEV. |
+| `Code.js` | Squelette back-end : sert l'app, lit/écrit le Sheet de l'environnement **par lots + cache + verrou**. |
+| `Index.html` | Squelette front mono-page ; bandeau DEV, bouton de test et « voir en tant que » en DEV seulement. |
 | `Styles.html`, `Header.html` | La charte graphique (copies de `design-system/brand.css` et `header.js`) sous la forme `.html` qu'Apps Script sait servir. |
 | `design-system/` | Sources de la charte graphique : tokens, composants, en-tête `<app-header>`, règles d'usage, page d'aperçu. Reste en local. |
-| `DEPLOY.md` | Mémo de déploiement par projet (IDs + commande de publication). |
+| `DEPLOY.md` | Mémo de déploiement par projet : IDs DEV et PROD, publication, retour arrière. |
 | `.gitignore` | Exclut jetons et tout fichier de secret. |
 | `.claspignore` | Empêche `clasp push` d'envoyer `design-system/` chez Google (ses sources feraient planter l'app côté serveur). |
 | `bootstrap.sh` | Commande d'install « une ligne » (Mac) : choisit l'assistant, installe Node + l'**app Claude desktop** (cask `claude`, ou **Codex** CLI), récupère le squelette, ouvre l'app sur le projet. |
@@ -55,7 +52,7 @@ Sheet, déploiement, puis itérations.
 - **Le Sheet est la source de vérité** : données *et* droits, onglets auto-créés,
   modifiables sans redéployer.
 - **Secrets jamais dans le code ni Git** → Propriétés du script (aucun secret dans le kit pour l'instant). Dès qu'un secret ou une clé API apparaît, l'IA demande si l'utilisateur est absolument certain qu'il n'y a aucun risque ; au moindre doute, e-mail à `dev@gong-galaxy.com`.
-- **Toujours redéployer le même déploiement** : l'URL `/exec` ne change jamais.
+- **Deux environnements, DEV et PROD, jamais un de plus** : un seul code, deux projets Apps Script jumeaux, chacun avec son Sheet et **un seul** déploiement. On publie en DEV, on teste, puis la PROD reçoit le même code sur demande. En DEV, les notifications partent vers le développeur et les outils de test sont disponibles ; en PROD, jamais. Les adresses `/exec` ne changent jamais.
 - **Double versioning** : Git (le code) + Apps Script (`version`/`redeploy`).
 - **Code commenté en anglais, doc et interface en français.**
 

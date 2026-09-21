@@ -7,8 +7,8 @@
 > > « Lis `AGENTS.md` et aide-moi à démarrer mon application. »
 >
 > L'IA commence par **mettre en place le projet** (outils, dépôt GitHub, dossier Drive,
-> déploiement d'un squelette en ligne) et ne te demande **ce que doit faire l'application
-> qu'à la toute fin**, une fois la plomberie prête. Pas besoin de savoir coder : tu
+> deux environnements en ligne : **DEV** pour tester, **PROD** pour les utilisateurs) et ne te
+> demande **ce que doit faire l'application qu'à la toute fin**, une fois la plomberie prête. Pas besoin de savoir coder : tu
 > valides, tu fais les quelques clics côté Google/GitHub, l'IA fait le reste.
 
 ---
@@ -31,13 +31,16 @@ En permanence :
   à partir des réponses de la conversation. L'utilisateur **n'édite jamais** un fichier à la main
   - son seul geste « fichier » est de **coller une valeur de secret** dans l'éditeur (§7), que tu
   guides pas à pas.
-- **Demande confirmation AVANT toute action irréversible côté Google/GitHub** : premier
-  déploiement, suppression d'un fichier/onglet Drive, envoi d'un **vrai** e-mail à
-  des destinataires réels (teste d'abord sur toi-même). Un dépôt public est **interdit** (règle 10).
+- **Demande confirmation AVANT toute action irréversible côté Google/GitHub** : création des
+  deux déploiements (DEV et PROD), **toute publication en PROD**, suppression d'un fichier/onglet
+  Drive, envoi d'un **vrai** e-mail à des destinataires réels (teste d'abord en DEV). Un dépôt
+  public est **interdit** (règle 10).
+- **Tu travailles en DEV.** La PROD ne reçoit que du code déjà publié et testé en DEV, et
+  seulement quand l'utilisateur le demande explicitement (règle n°2, §4).
 - Si quelque chose sort du périmètre (nouveau scope sensible, changement d'URL publique)
   → **arrête-toi et renvoie vers FX** (§11). **Secret ou clé API** → **règle n°1** (question à
   l'utilisateur, e-mail à `dev@gong-galaxy.com` au moindre doute).
-- **Respecte les 10 règles d'or ci-dessous sans exception.**
+- **Respecte les 11 règles d'or ci-dessous sans exception.**
 
 ### ⚠️ Ordre impératif au démarrage
 
@@ -51,12 +54,13 @@ fonctionnalités de l'app avant que la plomberie soit en place** :
    Si rien ne s'ouvre : onglet **Code** → **Select folder** → choisir le dossier.
 1. **Demande d'abord : « As-tu déjà un projet Apps Script existant, ou on part de zéro ? »**
    - **De zéro** → **Parcours A** (§3).
-   - **Projet existant** (déjà en ligne, peut-être avec une URL imprimée) → **Parcours B**
-     (§3) : tu récupères son Script ID/URL et tu mets Git/GitHub + le versionnement en place
-     **autour** du projet existant, sans casser son URL publique.
+   - **Projet existant** (fait à la main, déjà en ligne, peut-être avec une URL imprimée) →
+     **Parcours B** (§3, **étape critique**) : tu le fais passer en DEV + PROD **sans rien perdre
+     ni rien casser**, puis tu remets son code aux bonnes pratiques du kit.
    - **Projet déjà sur GitHub** dans `gongsup1` (nouveau Mac, reprise du projet d'un collègue) → **Parcours C** (§3) : tu récupères le code depuis GitHub, sans rien créer.
-2. Déroule **toute la mise en place** du parcours choisi, jusqu'à un **projet déployé et
-   versionné sur GitHub** (squelette neuf, ou projet existant repris proprement).
+2. Déroule **toute la mise en place** du parcours choisi, jusqu'à un **projet versionné sur
+   GitHub avec ses deux environnements DEV et PROD en ligne** (squelette neuf, ou projet
+   existant repris proprement).
 3. **Seulement alors**, pose la question fonctionnelle (§3, *Phase finale*) : « décris /
    quelles évolutions veux-tu pour l'application ? », et itère (§4).
 
@@ -67,26 +71,35 @@ projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit fa
 
 ---
 
-## 1. Les 10 règles d'or (non négociables)
+## 1. Les 11 règles d'or (non négociables)
 
 1. **Secrets → jamais dans le code ni dans Git.** Clés API, mots de passe, jetons vivent dans les
    **Propriétés du script** (valeur jamais inventée ni recopiée ailleurs).
    Voir §7. *Une clé committée reste dans l'historique Git pour toujours,
    et se fait révoquer automatiquement → panne silencieuse.*
    **Dès qu'un secret ou une clé API entre en jeu** (trouvé dans le code, demandé pour une fonctionnalité, collé par l'utilisateur, sur le point d'être committé) : **arrête-toi et demande à l'utilisateur s'il est absolument certain qu'il n'y a aucun risque**. Seul un « oui » franc, avec une raison claire (ex. : c'est un identifiant public, pas un vrai secret), permet de continuer. **Au moindre doute**, le sien ou le tien : aucun commit, aucun push, et **fais envoyer un e-mail à `dev@gong-galaxy.com`** (procédure au §7).
-2. **Toujours redéployer LE MÊME déploiement.** L'URL publique `/exec` peut être imprimée
-   (QR codes, liens). Le **tout premier** `clasp deploy` est le **seul** ; ensuite,
-   **uniquement** `clasp redeploy <DEPLOYMENT_ID>`. ❌ Jamais un nouveau déploiement,
-   ❌ jamais supprimer le déploiement. `clasp push` **ne publie pas** (voir §4).
+2. **Deux déploiements, DEV et PROD, JAMAIS un de plus.** Chaque app = **un seul code**
+   (un dépôt Git) et **deux projets Apps Script jumeaux**, « `<Nom>` (DEV) » (`.clasp.json`, cible
+   par défaut) et « `<Nom>` (PROD) » (`.clasp.prod.json`), chacun avec son Google Sheet et **un
+   seul** déploiement, créé une fois à la mise en place (§3). Ensuite, **uniquement**
+   `clasp redeploy` sur `DEPLOYMENT_ID_DEV` ou `DEPLOYMENT_ID_PROD` (notés dans `DEPLOY.md`).
+   ❌ Jamais un nouveau déploiement, ❌ jamais supprimer un déploiement, ❌ jamais un troisième
+   projet. **Ordre immuable** : DEV d'abord, PROD ensuite, avec le **même code** (même commit),
+   sur demande explicite de l'utilisateur et après sa confirmation. Les adresses `/exec` peuvent
+   être imprimées (QR codes, liens) : elles ne changent jamais. `clasp push` **ne publie pas** (§4).
 3. **Double versioning : Git ET Apps Script.** Chaque changement significatif = un
    **commit Git** (historique du code, poussé sur GitHub) **et**, à la publication, une
-   **version clasp** + un `redeploy`. Voir §4.
+   **version clasp** + un `redeploy`. Voir §4. **Le code ne se modifie JAMAIS dans l'éditeur
+   Apps Script en ligne** (ni DEV ni PROD) : toute modification faite là-bas serait écrasée à la
+   prochaine publication.
 4. **Code commenté en anglais, tout le reste en français** (README, interface, doc, noms d'onglets).
 5. **Le Google Sheet est la source de vérité.** Données **et** listes de personnes/droits
-   vivent dans des onglets **créés automatiquement** et **modifiables sans redéployer**.
-6. **Toujours ouvrir le Sheet par son ID (`openById`), jamais `getActiveSpreadsheet()`** (ce
-   dernier n'est pas fiable en web-app `/exec` ni en déclencheur). Le squelette accepte l'**URL
-   complète ou l'ID** dans `SHEET_SOURCE` : `sheetId_()` en extrait l'ID, puis `openById`.
+   vivent dans des onglets **créés automatiquement** et **modifiables sans redéployer**. Chaque
+   environnement a **son** Sheet : les tests du DEV ne touchent jamais les données de la PROD.
+6. **Toujours ouvrir le Sheet par son ID, jamais `getActiveSpreadsheet()`** (ce dernier n'est
+   pas fiable en web-app `/exec` ni en déclencheur, et ignore DEV/PROD). Tout accès passe par
+   `envSpreadsheet_()` (`Env.js`), qui ouvre le Sheet de l'environnement courant ; `ENVIRONMENTS`
+   accepte l'**URL complète ou l'ID**.
 7. **`google.script.run` sérialise mal les tableaux d'objets** : une fonction serveur qui
    renvoie une liste/objet renvoie une **chaîne JSON** ; le navigateur fait `JSON.parse`.
 8. **Parle au Sheet par LOTS, pas cellule par cellule**, et **cache** les listes qui
@@ -101,6 +114,17 @@ projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit fa
     repo public, ne bascule **jamais** un repo en public (le code porte des références internes :
     IDs de Sheet, logique métier, listes de personnes). Le **seul** dépôt public est le template
     `gongsup1/appsscript-starter-kit`, que tu ne crées pas. Au moindre doute → privé + FX (§11).
+11. **DEV et PROD se comportent différemment, par construction** (`Env.js`). La variable **`ENV`**
+    vaut `'DEV'` ou `'PROD'` : elle est **calculée à partir de l'ID du projet** qui exécute le
+    code, jamais tapée à la main, jamais déduite de l'URL ni d'un paramètre ; un projet inconnu
+    refuse de tourner.
+    - **Notifications** : **toutes** passent par `notify_()` (§8.a). En DEV, elles partent
+      **uniquement vers le développeur**, avec « [DEV] » et les vrais destinataires indiqués.
+      Jamais de `MailApp`/`GmailApp` ailleurs.
+    - **Tests, debug, « voir en tant que »** : **DEV uniquement**. Chaque fonction de ce type
+      commence par `requireDev_()`, qui la **refuse côté serveur** en PROD (cacher un bouton ne
+      suffit pas : n'importe qui peut appeler une fonction serveur depuis la console du navigateur).
+    - **Bandeau « Environnement DEV »** toujours visible en DEV, jamais en PROD.
 
 Bonus : `access: DOMAIN` dans `appsscript.json` réserve l'app au domaine `@gong-galaxy.com`.
 Ne passe jamais en `ANYONE` sans validation de FX.
@@ -154,19 +178,28 @@ Il faut aussi un **dossier Drive** pour le projet (voir §3, étape 1).
 
 ## 3. Mise en place du projet (AVANT de parler des fonctionnalités)
 
-> But : arriver à un **projet déployé et versionné sur GitHub** - un squelette « bonjour »
-> tout neuf **ou** ton projet existant repris proprement - **avant** de travailler sur ce que
-> l'app doit faire. Ne passe à la *Phase finale* qu'une fois la plomberie verte.
+> But : arriver à un projet **versionné sur GitHub** avec ses **deux environnements en ligne, DEV et PROD** (règles n°2 et n°11) : un squelette « bonjour » tout neuf **ou** ton projet existant repris proprement, **avant** de travailler sur ce que l'app doit faire. Ne passe à la *Phase finale* qu'une fois la plomberie verte.
+
+**L'architecture, à expliquer simplement à l'utilisateur** : un seul code, deux projets Apps Script jumeaux, chacun avec son Google Sheet et **un seul** déploiement.
+
+| | DEV | PROD |
+|---|---|---|
+| Pour qui | le développeur (et ses testeurs) | les utilisateurs |
+| Projet Apps Script | « `<Nom>` (DEV) », fichier `.clasp.json` : cible **par défaut** de clasp | « `<Nom>` (PROD) », fichier `.clasp.prod.json` : toujours `clasp -P .clasp.prod.json …` |
+| Google Sheet | « `<Nom>` (DEV) » : données de test | « `<Nom>` (PROD) » : vraies données |
+| Notifications | redirigées vers le développeur | vrais destinataires |
+| Tests, « voir en tant que », bandeau DEV | oui | non (refusés côté serveur) |
+| Mise à jour | aussi souvent que nécessaire | seulement du code validé en DEV, sur demande explicite |
 
 ### Phase 0 - Le projet existe-t-il déjà ?
 
 Pose **la** question d'abord : **« As-tu déjà un projet Apps Script, ou on part de zéro ? »**
 
 - **De zéro** → **Parcours A**.
-- **Projet Apps Script déjà existant, pas encore sur GitHub** (déjà en ligne, peut-être avec une URL imprimée) → **Parcours B**.
+- **Projet Apps Script déjà existant, pas encore sur GitHub** (fait à la main, par copier-coller dans l'éditeur) → **Parcours B**. C'est l'étape la plus délicate du kit : suis-la à la lettre.
 - **Projet déjà sur GitHub** dans l'org `gongsup1` (nouveau Mac, reprise du projet d'un collègue) → **Parcours C**. Dans le doute, vérifie : si `gh repo view gongsup1/<nom-du-projet>` répond, c'est le Parcours C (ne crée **jamais** un second dépôt).
 
-Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraisons`).
+Dans tous les cas, demande aussi un **nom court** de projet (ex. `suivi-livraisons`).
 
 ---
 
@@ -189,97 +222,177 @@ Dans les deux cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 > Le repo du projet est **privé** et **dans l'org** ; seul le template
 > `gongsup1/appsscript-starter-kit` est public.
 
-**A2. Dossier Drive + Sheet** (humain) : ouvre le **dossier qui t'a été attribué** pour tes
-projets - **FX t'en a partagé le lien** (c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un
-**sous-dossier** au nom du projet, puis **à l'intérieur** un **Google Sheet** vide. **Copie
-l'URL entière du Sheet** (la barre d'adresse du navigateur) et donne-la à l'IA - **pas besoin
-d'y repérer l'ID**, le squelette accepte l'URL complète et en extrait l'ID tout seul. Donne
-aussi l'**ID (ou l'URL) du dossier**.
+**A2. Dossier Drive + deux Sheets** (humain) : ouvre le **dossier qui t'a été attribué** pour tes projets (**FX t'en a partagé le lien** : c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un **sous-dossier** au nom du projet, puis **à l'intérieur deux Google Sheets vides** : « `<Nom>` (DEV) » et « `<Nom>` (PROD) ». **Copie l'URL entière de chacun** (barre d'adresse du navigateur) et donne-les à l'IA en précisant lequel est lequel : pas besoin d'y repérer l'ID. Donne aussi l'**ID (ou l'URL) du dossier**.
 
-> Le Sheet **doit** vivre dans ton dossier attitré : c'est là que FX peut le retrouver et
-> l'auditer. L'IA **ne peut pas** créer ce dossier/Sheet à ta place - écrire dans Drive
-> exige une autorisation Google qu'elle n'a pas (comme pour les secrets). Ces 2-3 clics
+> Les Sheets **doivent** vivre dans ton dossier attitré : c'est là que FX peut les retrouver et
+> les auditer. L'IA **ne peut pas** créer ce dossier ni ces Sheets à ta place : écrire dans Drive
+> exige une autorisation Google qu'elle n'a pas (comme pour les secrets). Ces quelques clics
 > restent le geste humain ; l'IA fait tout le reste.
 
-**A3. Brancher + déployer le squelette** (l'IA, déploiement à confirmer) :
+**A3. Créer les deux projets et leurs deux déploiements** (l'IA, à confirmer avec l'utilisateur) :
 ```bash
-clasp create --type standalone --title "<Nom du projet>"
+# 1. Les deux projets Apps Script. PROD d'abord, puis DEV : à la fin, .clasp.json = DEV (défaut)
+#    et .clasp.prod.json = PROD. Un clasp push sans précision ne peut donc JAMAIS toucher la PROD.
+clasp create --type standalone --title "<Nom> (PROD)"
+mv .clasp.json .clasp.prod.json
+clasp create --type standalone --title "<Nom> (DEV)"
 git restore appsscript.json   # ⚠️ clasp create ÉCRASE le manifeste par sa version par défaut
                               #    (fuseau New York, sans web-app ni access DOMAIN). On remet
                               #    celui du squelette depuis Git AVANT de pousser.
-# dans Code.js : remplacer <URL_OU_ID_DU_GOOGLE_SHEET> (colle l'URL du Sheet de A2) et <APP NAME>
+# 2. Env.js : renseigner ENVIRONMENTS (Script IDs lus dans .clasp.json et .clasp.prod.json,
+#    Sheets = URLs de A2). Code.js : remplacer <APP NAME>.
+# 3. DEV : pousser, versionner, créer SON déploiement (le seul, pour toujours).
 clasp push
-clasp version "v1 - squelette"                        # → numéro <num>
-clasp deploy -V <num> -d "<Nom du projet> - app web"  # → note le DEPLOYMENT_ID (AKfyc…) = le SEUL
-clasp open-web-app
+clasp version "v1 - squelette"                                      # → <num>
+clasp deploy -V <num> -d "<Nom> (DEV)"                              # → DEPLOYMENT_ID_DEV
+# 4. PROD : le MÊME code, SON déploiement (le seul, pour toujours).
+clasp -P .clasp.prod.json push
+clasp -P .clasp.prod.json version "v1 - squelette"                  # → <num_prod>
+clasp -P .clasp.prod.json deploy -V <num_prod> -d "<Nom> (PROD)"    # → DEPLOYMENT_ID_PROD
 ```
+Ces deux `clasp deploy` sont les **seuls** de toute la vie du projet (règle n°2). À la première ouverture de chaque adresse, Google demande d'autoriser l'app : c'est normal, l'utilisateur accepte.
 
-**A4. Mémo + commit** : remplis `DEPLOY.md` ; **remplace le README** par un court README du projet
-(titre = nom du projet, 1-2 lignes, pointe vers `DEPLOY.md` pour l'URL/IDs) ; **supprime
-`bootstrap.sh`** s'il est présent (c'est l'installeur du template, inutile dans un projet). Puis
-`git add -A && git commit -m "chore: bootstrap projet Apps Script" && git push`.
+**A4. Mémo + commit** : remplis `DEPLOY.md` (colonnes DEV et PROD) ; **remplace le README** par un court README du projet (titre = nom du projet, 1-2 lignes, pointe vers `DEPLOY.md` pour les adresses et IDs) ; **supprime `bootstrap.sh`** s'il est présent (c'est l'installeur du template, inutile dans un projet). Puis `git add -A && git commit -m "chore: bootstrap projet Apps Script (DEV + PROD)" && git push`.
 
-**A5. Vérifier** : l'URL `/exec` affiche le squelette et écrit une ligne test dans le Sheet ;
-le code est sur GitHub. ✅ → passe à la **Phase finale**.
+**A5. Vérifier les deux environnements** :
+- **DEV** : bandeau « Environnement DEV » ; le bouton « Ajouter une entrée de test » écrit une ligne dans le **Sheet DEV**, et seulement lui ; « Voir en tant que » change l'utilisateur affiché.
+- **PROD** : ni bandeau, ni bouton de test, ni « voir en tant que ».
+- Le code est sur GitHub. ✅ → passe à la **Phase finale**.
 
 ---
 
-### Parcours B - Reprendre un projet existant
+### Parcours B - Reprendre un projet existant (ÉTAPE CRITIQUE)
 
-**B1. Récupérer le Script ID** (humain) : ouvre le projet dans l'éditeur Apps Script →
-⚙️ *Paramètres du projet* → copie le **Script ID**. (Ou colle l'URL de l'éditeur
-`https://script.google.com/…/projects/`**`<SCRIPT_ID>`**`/edit`.)
-⚠️ **Ne confonds pas** avec l'URL `/exec` : celle-ci contient un **ID de déploiement**, pas le Script ID.
-Pré-requis : l'utilisateur doit être **éditeur** du script **et** du Google Sheet associé (sinon `clasp clone` échoue). S'il ne l'est pas, le propriétaire doit les lui partager en « Éditeur » ; à défaut, renvoie vers FX.
+> **Objectif** : faire passer un projet bricolé (code copié-collé dans l'éditeur Apps Script) à un projet propre, DEV + PROD, que tu pilotes, **sans rien perdre** (code publié, travail en cours, données, adresse de l'app, déclencheurs, propriétés) **et sans rien casser** pour ceux qui l'utilisent.
+>
+> **Trois garanties, à tenir à chaque étape :**
+> 1. **Tout est sauvegardé dans Git avant la moindre modification** (B3).
+> 2. **La PROD ne change pas d'un octet tant que l'utilisateur n'a pas validé le DEV** (B7). Jusque-là, ses utilisateurs gardent la même adresse et la même version.
+> 3. **Rien n'est supprimé** : ni fichier, ni déploiement, ni onglet, ni déclencheur. Un retour arrière reste possible à tout moment.
+>
+> Explique ces trois garanties à l'utilisateur avant de commencer. Au moindre doute, à n'importe quelle étape : arrête-toi et renvoie vers FX (§11).
 
-**B2. Rapatrier le code** (l'IA) : si tu es parti du template, **supprime d'abord** les fichiers
-squelette (`Code.js`, `Index.html`, `appsscript.json`) - on va récupérer les vrais. Garde les
-fichiers-guides et la charte (`AGENTS.md`, `CLAUDE.md`, `README.md`, `DEPLOY.md`, `.gitignore`,
-`.claspignore`, `design-system/`, `Styles.html`, `Header.html`). **Garde surtout `.claspignore`** :
-sans lui, le prochain `clasp push` enverrait `design-system/` et casserait l'app (§9). Puis :
+**B1. Les questions** (une à la fois ; note les réponses dans `DEPLOY.md`) :
+1. « **Des personnes utilisent-elles déjà l'app** (lien, favori, QR code), **ou son Google Sheet contient-il de vraies données à garder ?** »
+   - **Oui** → le projet existant **devient la PROD** : même projet, même Sheet, même adresse. On lui ajoute un DEV (B4).
+   - **Non** (simple prototype) → le projet existant **devient le DEV**, et on crée une PROD neuve (B5).
+2. Si le projet existant devient la PROD : « **As-tu déjà une copie de travail ou de test** de ce projet (un autre script, un autre Sheet) ? »
+   - **Oui** → cette copie **devient le DEV** (son code est sauvegardé d'abord, B3).
+   - **Non** → on crée le DEV par copie (B4).
+3. Le **Script ID** de chaque projet concerné : éditeur Apps Script → ⚙️ *Paramètres du projet* → *ID du script* (ou l'URL de l'éditeur `https://script.google.com/…/projects/`**`<SCRIPT_ID>`**`/edit`). ⚠️ **Pas l'URL `/exec`** : elle contient un ID de déploiement, pas le Script ID.
+4. « **Ouvres-tu le script depuis le Sheet** (*Extensions → Apps Script*) ? » **Oui** = script **lié** au Sheet ; **non** = script **autonome**. Ça change la façon de créer l'environnement manquant (B4, B5).
+
+Pré-requis : l'utilisateur est **éditeur** de chaque script et de chaque Sheet concerné (sinon `clasp` échoue). Sinon, le propriétaire les lui partage en « Éditeur » ; à défaut, FX.
+
+**B2. Inventaire, en lecture seule** (l'IA) : on regarde, on ne modifie rien.
 ```bash
-clasp clone <SCRIPT_ID>        # rapatrie le code existant + écrit .clasp.json
+clasp deployments <SCRIPT_ID_EXISTANT>     # liste les déploiements, sans rien toucher
 ```
+- Identifie le déploiement **en service** (une adresse de web-app, pas l'entrée `@HEAD`) et le **numéro de version N** qu'il sert (`@N`). S'il y en a plusieurs, demande quelle adresse est réellement utilisée ou imprimée. Note son **DEPLOYMENT_ID** et **N** dans `DEPLOY.md` : N est le point de **retour arrière**.
+- **Plusieurs adresses réellement utilisées ?** Garde-en **une** comme PROD, **ne touche pas aux autres** (ni modification, ni suppression) et signale-les à FX (§11) : c'est lui qui décidera de leur sort.
+- Fais relever à l'utilisateur, dans l'éditeur du projet existant, les **déclencheurs** (icône horloge ⏰) et les **noms** des *Propriétés du script* (⚙️ *Paramètres du projet*, **jamais les valeurs**). Note-les dans `DEPLOY.md`. Ils restent en place : on n'y touche pas.
 
-**B3. Repérer le déploiement PUBLIÉ existant** (crucial - l'IA) :
+**B3. Tout sauvegarder dans Git, AVANT toute modification** (l'IA). Si tu es parti du squelette, retire d'abord ses fichiers d'exemple `Code.js`, `Index.html` et `appsscript.json` (on va récupérer les vrais) ; garde tout le reste, **surtout `Env.js` et `.claspignore`**. Exemple quand le projet existant devient la PROD (s'il devient le DEV : écris `.clasp.json` au lieu de `.clasp.prod.json`, et retire `-P .clasp.prod.json` des commandes) :
 ```bash
-clasp deployments              # liste les déploiements
+# Le projet existant = PROD : son fichier s'appelle d'emblée .clasp.prod.json, pour qu'un
+# clasp push sans précision ne puisse JAMAIS l'atteindre.
+printf '{"scriptId":"<SCRIPT_ID_EXISTANT>","rootDir":""}\n' > .clasp.prod.json
+git init -b main && git add -A && git commit -m "chore: kit GONG (guides, charte, Env.js)"
+# 1. Le code que voient les utilisateurs : exactement la version N servie en ce moment.
+clasp -P .clasp.prod.json pull --versionNumber <N>
+#    → cherche les secrets écrits en dur AVANT ce commit (ci-dessous)
+git add -A && git commit -m "sauvegarde: code en production (version <N>)" && git tag origine-prod
+# 2. Le code actuel de l'éditeur : il peut contenir du travail jamais publié.
+clasp -P .clasp.prod.json pull
+git status     # des différences ? alors :
+git add -A && git commit -m "sauvegarde: travail non publié de l'éditeur" && git tag origine-editeur
+# 3. Tout part sur GitHub, étiquettes comprises.
+gh repo create gongsup1/<nom-du-projet> --private --source=. --push && git push --tags
 ```
-Identifie celui **en service** (celui qui a une URL de web-app, pas l'entrée `@HEAD`). Si
-plusieurs, demande à l'utilisateur **quelle URL `/exec` est celle utilisée/imprimée**. Note
-son **DEPLOYMENT_ID** dans `DEPLOY.md`. ⚠️ **NE crée PAS de nouveau déploiement** : les futures
-publications se feront avec `clasp redeploy <DEPLOYMENT_ID>` (§4), pour garder l'URL intacte.
+- **Copie de test existante** (B1, question 2) : sauvegarde aussi son code, sur une branche à part (`git switch -c origine-copie-test`, `.clasp.json` vers son Script ID, `clasp pull`, commit, `git push -u origin origine-copie-test`, puis `git switch main`).
+- **Secrets écrits en dur** : avant le **premier** commit qui contient du code rapatrié, cherche-les. Une app construite hors du kit en contient souvent ; une fois committé, un secret resterait dans l'historique pour toujours.
+  ```bash
+  grep -rnIiE "api[_-]?key|apikey|secret|token|passw|bearer|authorization|sk-[A-Za-z0-9]|AIza[0-9A-Za-z_-]{20}|xox[abp]-|ghp_" --include='*.js' --include='*.gs' --include='*.html' --include='*.json' --exclude=Styles.html --exclude=Header.html --exclude-dir=design-system --exclude-dir=.git .
+  ```
+  Examine chaque résultat (beaucoup sont de faux positifs : un commentaire, un `getProperty('...')`). Pour chaque **vrai** secret, applique la **règle n°1** avant tout commit.
 
-**B4. Git + GitHub** (l'IA) - mettre le projet existant sous versionnement, sans toucher au code.
+À ce stade, **tout** est à l'abri : le code en production (`origine-prod`), le travail non publié (`origine-editeur`), la copie de test (branche `origine-copie-test`). Dis-le à l'utilisateur.
 
-**D'abord, cherche les secrets écrits en dur.** Une app construite hors du kit contient souvent une clé ou un mot de passe directement dans le code ; une fois committé, il resterait dans l'historique pour toujours.
-```bash
-grep -rnIiE "api[_-]?key|apikey|secret|token|passw|bearer|authorization|sk-[A-Za-z0-9]|AIza[0-9A-Za-z_-]{20}|xox[abp]-|ghp_" --include='*.js' --include='*.gs' --include='*.html' --include='*.json' --exclude=Styles.html --exclude=Header.html --exclude-dir=design-system --exclude-dir=.git .
-```
-Examine chaque résultat (beaucoup sont de faux positifs : un commentaire, un `getProperty('...')`). Pour chaque **vrai** secret, applique la **règle n°1** avant tout commit. Puis :
-```bash
-git init -b main && git add -A
-git commit -m "chore: import du projet existant + standards GONG"
-gh repo create gongsup1/<nom-du-projet> --private --source=. --push
-```
+**B4. Mettre en place le DEV** (quand le projet existant devient la PROD) :
+- **Copie de test existante** → c'est le DEV : `printf '{"scriptId":"<SCRIPT_ID_COPIE>","rootDir":""}\n' > .clasp.json` ; son Sheet est le Sheet DEV. Si l'un de ses déploiements est déjà utilisé par des testeurs (`clasp deployments <SCRIPT_ID_COPIE>`), garde-le comme `DEPLOYMENT_ID_DEV` ; sinon tu créeras le seul déploiement DEV en B6.
+- **Pas de copie** → on la crée (humain, guidé) : dans le dossier du projet, **Fichier → Créer une copie** du Sheet PROD, nommée « `<Nom>` (DEV) ». La copie contient les **vraies données** : demande à l'utilisateur s'il veut les garder pour tester ou vider les onglets de données de la **copie** (jamais ceux du Sheet PROD).
+  - Script **lié** : la copie du Sheet emporte une copie du script, c'est le **projet DEV**. Son Script ID : dans la copie, *Extensions → Apps Script* → ⚙️. Puis `printf '{"scriptId":"<SCRIPT_ID_DEV>","rootDir":""}\n' > .clasp.json`.
+  - Script **autonome** : `clasp create --type standalone --title "<Nom> (DEV)"` puis `git restore appsscript.json`.
+- Les **déclencheurs** ne sont pas copiés : recrée dans le DEV seulement ceux qui sont utiles aux tests (leurs notifications iront au développeur). Les **Propriétés du script** du DEV (clés…) : règle n°1.
 
-**B5. Ranger le projet dans le dossier Drive attitré** (humain, guidé) : pour la gouvernance, le
-projet existant doit vivre **dans le dossier de projets attitré** du collaborateur, comme un
-nouveau projet (cf. A2). Guide-le **pas à pas** :
-1. Dans **Drive**, ouvre ton **dossier attitré** (`<ID_DOSSIER_PERSO_DRIVE>` - lien partagé par FX).
-2. Crée un **sous-dossier** au nom du projet.
-3. **Glisse** dedans le **Google Sheet** du projet (s'il y en a un) **et** le **fichier du script**
-   s'il apparaît dans Drive.
+**B5. Mettre en place la PROD** (quand le projet existant devient le DEV, simple prototype) :
+- Même type que le DEV. Script **lié** : l'utilisateur fait **Fichier → Créer une copie** du Sheet DEV, nommée « `<Nom>` (PROD) », dans le dossier du projet, et **vide les onglets de données de cette copie** (la PROD démarre propre) ; la copie emporte le script, c'est le projet PROD (Script ID via *Extensions → Apps Script* → ⚙️), à écrire dans `.clasp.prod.json`. Script **autonome** : l'utilisateur crée un Sheet vide « `<Nom>` (PROD) » (les onglets se créent seuls, règle n°5), puis :
+  ```bash
+  mv .clasp.json .clasp.dev.json        # met le DEV de côté le temps de créer la PROD
+  clasp create --type standalone --title "<Nom> (PROD)"
+  mv .clasp.json .clasp.prod.json && mv .clasp.dev.json .clasp.json
+  git restore appsscript.json
+  ```
+- La PROD n'a **encore aucun déploiement** : son unique déploiement sera créé en B7. Côté DEV, si l'un des déploiements existants est déjà utilisé, garde-le comme `DEPLOYMENT_ID_DEV`.
 
-> **Sans risque :** déplacer ces fichiers dans un dossier **ne change ni les IDs, ni l'URL
-> `/exec`, ni le fonctionnement du code** (la position dans Drive est indépendante des IDs). Un
-> script *bound* (attaché au Sheet) suit automatiquement le Sheet. L'IA **ne peut pas** faire ce
-> déplacement à ta place (elle n'a pas accès à Drive) - c'est un simple glisser-déposer. Récupère
-> l'**URL du Sheet** et donne-la à l'IA pour `DEPLOY.md`.
+**B6. Remettre le code d'aplomb, dans le DEV uniquement** (l'IA). Trois temps, **chacun montré à l'utilisateur, commité à part et testé en DEV** avant de passer au suivant. Pendant tout ce temps, **la PROD ne bouge pas**.
 
-**B6. Vérifier** : l'URL `/exec` **inchangée** fonctionne toujours ; le code est sur GitHub ;
-`DEPLOY.md` rempli (Script ID, **DEPLOYMENT_ID**, URL, Sheet URL/ID) ; le Sheet + le script sont **dans
-le dossier attitré**. ✅ → passe à la **Phase finale**.
+**Base de départ** : montre à l'utilisateur ce qui distingue le travail non publié de la production (`git diff --stat origine-prod origine-editeur`) et demande s'il veut le garder. Non → repars de la production (`git checkout origine-prod -- .` puis commit). Rien n'est perdu : les deux restent dans Git.
+
+**B6.a Brancher DEV/PROD** (obligatoire) :
+1. `Env.js` : renseigner `ENVIRONMENTS` (Script IDs et Sheets, DEV et PROD). `ENV` vaut alors `'DEV'` ou `'PROD'` selon le projet qui exécute le code.
+2. Tout accès au Sheet (`getActiveSpreadsheet()`, `openById('…')` écrit en dur) passe par `envSpreadsheet_()`.
+3. Tout envoi d'e-mail passe par `notify_()` (§8.a) : plus aucun `MailApp`/`GmailApp` ailleurs.
+4. Toute fonction de test, de debug ou de « voir en tant que » commence par `requireDev_()`.
+5. Web-app : bandeau DEV sur la page principale (modèle : bloc `<? if (isDev) { ?>` de l'`Index.html` du squelette, avec `tpl.isDev = isDev_()` dans `doGet`). Si l'app n'utilise pas la charte, un bandeau simple en style intégré suffit.
+
+**B6.b Mettre le code aux bonnes pratiques du kit** (obligatoire) : un code écrit par copier-coller s'en écarte presque toujours. Passe-le en revue par rapport aux règles d'or et au §6, **liste les écarts à l'utilisateur** en langage simple (ce qui ne va pas, le risque, ce que tu vas changer), puis corrige-les. Écarts typiques :
+- secret ou clé écrit dans le code (règle n°1 : question à l'utilisateur, `dev@gong-galaxy.com` au moindre doute) ;
+- lecture ou écriture du Sheet cellule par cellule, dans une boucle (règle n°8, §6) ;
+- objets ou tableaux renvoyés au navigateur sans `JSON.stringify` (règle n°7) ;
+- listes de personnes ou de droits écrites en dur au lieu d'un onglet du Sheet (règle n°5) ;
+- écritures concurrentes sans `LockService`, listes chaudes sans cache (§6) ;
+- fonctions internes exposées dans le menu *Exécuter* (nom sans `_` final) ;
+- commentaires de code absents ou pas en anglais, textes visibles pas en français (règle n°4).
+
+**Le comportement vu par les utilisateurs ne doit pas changer** : c'est une remise en ordre, pas une évolution. Une modification de fonctionnalité attend la *Phase finale*.
+
+**B6.c Le design** : si l'interface n'utilise pas la charte GONG (`design-system/`), demande à l'utilisateur : « **Veux-tu passer ton app aux couleurs et composants de l'entreprise maintenant, ou garder son design actuel pour le moment ?** »
+- **Migrer** → fais-le en DEV, après B6.a et B6.b validés (le visuel change, le fonctionnement non), en suivant la section « Charte graphique ».
+- **Garder** → note dans `DEPLOY.md` : « Design : hors charte, choix de l'utilisateur le <date> ». La règle de la charte ne s'applique pas à ce projet tant que ce choix tient ; tu pourras le reproposer lors d'une évolution importante de l'interface, sans insister.
+
+**Publier et tester le DEV** : `clasp push`, `clasp version`, puis `clasp redeploy <DEPLOYMENT_ID_DEV> …` s'il existe déjà, sinon `clasp deploy -V <num> -d "<Nom> (DEV)"` (le **seul** du DEV, pour toujours). Autorisations : règle n°9, dans l'éditeur du **DEV**. Teste avec l'utilisateur sur l'adresse DEV : tout doit marcher comme en PROD, plus les différences DEV (bandeau, notifications vers lui, outils de test).
+
+**B7. Première mise en production** (SEULEMENT quand l'utilisateur dit explicitement que le DEV est validé, et après sa confirmation) :
+- **Vérifications avant** : les déclencheurs et les noms de propriétés relevés en B2 correspondent à ce que le nouveau code attend ; `git status` est propre (exactement le code validé en DEV).
+- **Publier** :
+  ```bash
+  clasp -P .clasp.prod.json push              # ne change encore RIEN pour les utilisateurs
+  # nouveaux scopes (e-mail, Drive…) ? exécuter une fonction dans l'éditeur PROD et accepter (règle n°9)
+  clasp -P .clasp.prod.json version "vX - passage en DEV/PROD"                     # → <num>
+  clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <num> -d "<Nom> (PROD)"
+  git tag prod-vX && git push --tags
+  ```
+  PROD créée en B5 (pas encore de déploiement) : `clasp -P .clasp.prod.json deploy -V <num> -d "<Nom> (PROD)"` à la place du `redeploy`, le **seul** de la PROD.
+- **Vérifier tout de suite** l'adresse PROD (la même qu'avant) : l'app marche, sans bandeau DEV.
+- **Au moindre problème : retour arrière immédiat** vers la version N notée en B2, puis on corrige en DEV :
+  ```bash
+  clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <N> -d "<Nom> (PROD)"
+  ```
+
+**B8. Ranger dans le dossier Drive attitré** (humain, guidé) :
+1. Dans **Drive**, ouvre ton **dossier attitré** (`<ID_DOSSIER_PERSO_DRIVE>`, lien partagé par FX).
+2. Crée un **sous-dossier** au nom du projet (s'il n'existe pas déjà).
+3. **Glisse** dedans les **deux Google Sheets** (DEV et PROD) **et** les fichiers de script qui apparaissent dans Drive.
+
+> **Sans risque :** déplacer ces fichiers dans un dossier **ne change ni les IDs, ni les adresses,
+> ni le fonctionnement du code** (la position dans Drive est indépendante des IDs). Un script
+> lié suit automatiquement son Sheet. L'IA **ne peut pas** faire ce déplacement à ta place (elle
+> n'a pas accès à Drive) : c'est un simple glisser-déposer.
+
+**B9. Vérifier et passer le relais** :
+- Adresse PROD **inchangée** et fonctionnelle ; adresse DEV fonctionnelle ; code et étiquettes `origine-*` sur GitHub ; `DEPLOY.md` rempli (DEV et PROD, version N de retour arrière, déclencheurs, noms des propriétés) ; tout est dans le dossier attitré.
+- **Dis clairement à l'utilisateur** : « À partir de maintenant, ne modifie plus le code dans l'éditeur Apps Script, ni en DEV ni en PROD : demande-moi. Une modification faite dans l'éditeur serait écrasée à la prochaine publication. » ✅ → passe à la **Phase finale**.
 
 ---
 
@@ -287,7 +400,7 @@ le dossier attitré**. ✅ → passe à la **Phase finale**.
 
 Le projet a déjà son dépôt `gongsup1/<nom-du-projet>` (créé par le Parcours A ou B) et on le reprend sur un **nouveau Mac** ou **à la place d'un collègue**. On ne crée **rien** : ni dépôt, ni projet Apps Script, ni déploiement.
 
-**C1. Accès** (vérifié par l'IA, accordé par FX ou le propriétaire) : il faut un accès **en écriture** au dépôt, et être **éditeur** du script Apps Script et du Google Sheet (partage Drive). Vérifie le dépôt :
+**C1. Accès** (vérifié par l'IA, accordé par FX ou le propriétaire) : il faut un accès **en écriture** au dépôt, et être **éditeur** des deux projets Apps Script et des deux Google Sheets (partage Drive). Vérifie le dépôt :
 ```bash
 gh repo view gongsup1/<nom-du-projet> --json viewerPermission   # doit répondre WRITE ou ADMIN
 ```
@@ -304,14 +417,16 @@ git branch -u origin/main
 ```
 ⚠️ `reset --hard` et `clean -fd` effacent des fichiers locaux : **uniquement** dans un dossier fraîchement créé par la commande d'install (vérifié à l'étape 0), jamais dans un dossier où quelqu'un a travaillé.
 
-**C3. Rebrancher Apps Script** (l'IA) : `.clasp.json` (le Script ID) vient du dépôt. Vérifie que GitHub et Apps Script contiennent le même code (quelqu'un a pu faire `clasp push` sans committer) :
+**C3. Rebrancher Apps Script** (l'IA) : `.clasp.json` (DEV) et `.clasp.prod.json` (PROD) viennent du dépôt. Vérifie que GitHub et le **DEV** contiennent le même code (quelqu'un a pu faire `clasp push` sans committer) :
 ```bash
-clasp pull     # récupère le code actuellement dans Apps Script
+clasp pull     # récupère le code actuellement dans le projet DEV
 git status     # des différences ?
 ```
-S'il y en a, montre-les à l'utilisateur, puis `git add -A && git commit -m "chore: resynchronisation avec Apps Script" && git push`, **avant** toute modification.
+S'il y en a, montre-les à l'utilisateur, puis `git add -A && git commit -m "chore: resynchronisation avec le DEV" && git push`, **avant** toute modification. Ne fais **jamais** `clasp -P .clasp.prod.json pull` dans ce dossier : tu mélangerais le code de la PROD à ta copie de travail.
 
-**C4. Vérifier** : `DEPLOY.md` contient le **DEPLOYMENT_ID** (c'est lui qu'on continuera à `redeploy`, jamais un nouveau) ; `.claspignore` est présent s'il y a un dossier `design-system/` (sinon le remettre, §9). ✅ → passe à la **Phase finale**.
+**C4. Vérifier** : `DEPLOY.md` contient `DEPLOYMENT_ID_DEV` et `DEPLOYMENT_ID_PROD` (ce sont eux qu'on continuera à `redeploy`, jamais un nouveau) ; `Env.js` est renseigné ; `.claspignore` est présent s'il y a un dossier `design-system/` (sinon le remettre, §9). ✅ → passe à la **Phase finale**.
+
+> **Projet créé avant l'arrivée de DEV/PROD** (pas de `Env.js` ni de `.clasp.prod.json` dans le dépôt) : son projet Apps Script actuel **devient la PROD**. Applique le Parcours B à partir de B2 : le dépôt existe déjà (pas de `gh repo create`), et la sauvegarde B3 se limite à vérifier que GitHub contient bien la version en service (`clasp pull --versionNumber <N>` puis `git status`).
 
 ---
 
@@ -321,45 +436,49 @@ S'il y en a, montre-les à l'utilisateur, puis `git add -A && git commit -m "cho
   l'utilise, quelles informations elle affiche et enregistre. »
 - **Projet existant** : « **Que veux-tu modifier ou ajouter** à l'app existante ? »
 
-Puis construis / fais évoluer de façon **incrémentale** en suivant la boucle du §4 (adapter
-`Code.js`/`Index.html`, tester sur `/dev`, `commit` + `push`, `version` + `redeploy` sur le
-**DEPLOYMENT_ID** enregistré).
+Puis construis / fais évoluer de façon **incrémentale** en suivant la boucle du §4 : tout se fait et se teste en **DEV** ; la **PROD** ne reçoit le code que sur demande explicite de l'utilisateur, après confirmation.
 
 > **L'interface doit respecter la charte graphique** (section « Charte graphique - OBLIGATOIRE » :
 > `design-system/`). Sobre, gris + accent noir, couleur réservée au feedback, en-tête `<app-header>`
 > avec l'utilisateur connecté, **responsive**. Ouvre `design-system/showcase.html` pour voir les composants.
+> Seule exception : un projet repris dont l'utilisateur a choisi de garder son design (noté dans `DEPLOY.md`, B6.c).
 
 ---
 
 ## 4. La boucle d'itération (à chaque modification)
 
-Deux historiques à tenir : **Git** (le code) et **Apps Script** (le déploiement).
+Deux historiques à tenir : **Git** (le code) et **Apps Script** (les deux déploiements). Deux temps : le **DEV**, aussi souvent que nécessaire, puis la **PROD**, sur demande.
 
 ```
-Modifier le code
+Modifier le code (fichiers locaux ; JAMAIS dans l'éditeur Apps Script en ligne)
    │
-   ├─►  clasp push                          # met à jour la version de TEST (/dev), instantané
+   ├─► 1. Publier en DEV (aussi souvent que nécessaire) :
+   │      # Code.js : APP_VERSION = numéro qui va être publié (ex. 'v4')
+   │      git add -A && git commit -m "…" && git push
+   │      clasp push                                        # → projet DEV (.clasp.json, cible par défaut)
+   │      clasp version "v4 - …"                            # → <num>
+   │      clasp redeploy <DEPLOYMENT_ID_DEV> -V <num> -d "<Nom> (DEV)"
+   │      → tester avec l'utilisateur sur l'adresse DEV
    │
-   ├─►  Tester sur l'URL /dev               # clasp open-web-app, ou éditeur → Déployer → Tester
-   │
-   └─►  Quand c'est bon :
-        # dans Code.js : mettre APP_VERSION au numéro qui va être publié (ex. 'v2')
-        git add -A && git commit -m "…"      # historique du code
-        git push                             # → GitHub
-        clasp version "…"                    # → numéro <num> (garde la même description que le commit)
-        clasp redeploy <DEPLOYMENT_ID> -V <num> -d "<Nom du projet> - app web"   # → publie sur /exec
+   └─► 2. Passer en PROD : SEULEMENT sur demande explicite de l'utilisateur, après confirmation,
+          et SEULEMENT un code déjà publié et testé en DEV (même commit, git status propre) :
+          clasp -P .clasp.prod.json push
+          clasp -P .clasp.prod.json version "v4 - …"        # → <num_prod> (différent de <num> : normal)
+          clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <num_prod> -d "<Nom> (PROD)"
+          git tag prod-v4 && git push --tags
 ```
 
-- **Numéro de version TOUJOURS affiché en pied de page.** Avant de publier, mets `APP_VERSION`
-  (dans `Code.js`) au **même numéro** que le `clasp version` créé (`v2`, `v3`…). Il s'affiche
-  **en bas de l'app** (injecté par `doGet`), pour que chacun voie d'un coup d'œil quelle version
-  tourne. Ne publie jamais sans l'avoir mis à jour.
-- **`/dev`** = bac à sable (reflète le dernier `push`). **`/exec`** = l'app publiée, elle
-  ne change **que** par un `redeploy`, et son URL **ne change jamais**.
+- **Jamais de `clasp deploy` ici** : on ne fait que `redeploy` les deux déploiements existants (règle n°2).
+- **Nouveau scope** (e-mail, Drive…) : règle n°9, dans l'éditeur du DEV avant le `redeploy` DEV, puis dans l'éditeur de la PROD avant le `redeploy` PROD.
+- **Numéro de version TOUJOURS affiché en pied de page** (`APP_VERSION`, injecté par `doGet`). Mets-le à jour à chaque publication en DEV ; quand la PROD reçoit le même code, elle affiche le même numéro. Les numéros de version clasp diffèrent entre les deux projets : c'est normal, seul `APP_VERSION` compte pour les humains.
+- **Retour arrière PROD** (la nouveauté pose problème) : republie la version précédente, instantanément, puis corrige en DEV. Les versions : `clasp -P .clasp.prod.json versions`.
+  ```bash
+  clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <version précédente> -d "<Nom> (PROD)"
+  ```
 - **Astuce cache** : juste après un `redeploy`, un appareil peut afficher l'ancien code
   (cache navigateur). Forcer avec `?cb=1` à la fin de l'URL, ou vider le cache du site.
 - Garde la **même formulation** entre le message de commit et la description `clasp version` :
-  les deux historiques restent alignés et faciles à relire.
+  les historiques restent alignés et faciles à relire.
 
 ---
 
@@ -372,13 +491,15 @@ Le squelette est déjà en place - adapte-le, ne repars pas de zéro :
 | `AGENTS.md` | Ce guide. |
 | `CLAUDE.md` | Une ligne `@AGENTS.md` : Claude Code ne lit que `CLAUDE.md`, cette ligne lui fait charger ce guide. Source unique (Codex lit `AGENTS.md` directement). |
 | `appsscript.json` | Manifeste : fuseau Europe/Paris, web-app `executeAs USER_DEPLOYING`, `access DOMAIN`. |
-| `Code.js` | Backend : `doGet` sert l'app, lecture/écriture du Sheet **par lots + cache + verrou**, onglets auto-créés. À adapter (`TABS`, `getData`, `saveEntry`). |
-| `Index.html` | Front mono-page : appelle le backend via `google.script.run`, `JSON.parse` des réponses. |
-| `DEPLOY.md` | Mémo de déploiement du projet (IDs + commande de publication pré-remplie). |
+| `Env.js` | **DEV / PROD** : `ENVIRONMENTS` (Script IDs et Sheets des deux projets), `ENV` (`'DEV'` ou `'PROD'`), `envSpreadsheet_()`, `requireDev_()`, `appUser_()` (« voir en tant que »). Ne contient que ce qui dépend de l'environnement ; ne le supprime jamais (règle n°11). |
+| `Code.js` | Backend : `doGet` sert l'app, lecture/écriture du Sheet de l'environnement **par lots + cache + verrou**, onglets auto-créés. À adapter (`TABS`, `getState`, `addTestEntry`). |
+| `Index.html` | Front mono-page : appelle le backend via `google.script.run` (avec `VIEW_AS` en premier argument), `JSON.parse` des réponses. Bandeau DEV, bouton de test et « voir en tant que » rendus **en DEV seulement**. |
+| `DEPLOY.md` | Mémo de déploiement du projet : IDs DEV et PROD, commandes de publication et de retour arrière. |
 | `Styles.html`, `Header.html` | Copies de `design-system/brand.css` et `design-system/header.js` emballées en `.html`, seule forme qu'Apps Script sait servir. Incluses par `Index.html`. |
 | `.gitignore` | Exclut jetons clasp, `node_modules`, sauvegardes, tout fichier de secret. |
 | `.claspignore` | Ce que `clasp push` **n'envoie pas** : `design-system/` (ses sources casseraient l'app côté serveur). Ne pas supprimer. |
-| `.clasp.json` | Créé par `clasp create` ; associe le dossier au projet Apps Script. |
+| `.clasp.json` | Projet Apps Script **DEV** : cible par défaut de `clasp`. |
+| `.clasp.prod.json` | Projet Apps Script **PROD** : uniquement via `clasp -P .clasp.prod.json …`, sur demande de l'utilisateur. |
 | `design-system/` | **Charte graphique** partagée : `brand.css` (tokens + composants), `header.js` (`<app-header>`), `GUIDELINES.md` (règles d'usage), `showcase.html` (aperçu). Voir la section suivante. Reste en local, jamais poussé (`.claspignore`). |
 
 ---
@@ -488,37 +609,50 @@ committée reste dans l'historique **et se fait révoquer** → panne silencieus
 > N'ajoute que ce dont tu as besoin. Chaque recette introduit un **nouveau scope OAuth** →
 > applique la **règle n°9** (tester dans l'éditeur + accepter l'autorisation) **avant** de redéployer.
 
-### 8.a - Envoyer un e-mail (Google `MailApp`, depuis l'adresse de l'utilisateur)
+### 8.a - Envoyer un e-mail : `notify_()` (Google `MailApp`)
 
-Les e-mails partent **de l'adresse @gong-galaxy.com de la personne qui a déployé l'app** (l'app tourne en `executeAs: USER_DEPLOYING`) et apparaissent dans ses « Envoyés » Gmail. Aucune clé, aucun secret, aucun réglage chez un prestataire. Préviens l'utilisateur de ce point avant d'activer l'envoi : les destinataires verront **son nom** comme expéditeur, et leurs réponses arriveront **dans sa boîte**.
+**Tout** e-mail de l'app passe par `notify_()`, jamais par `MailApp` ou `GmailApp` directement (règle n°11).
+- **En PROD**, il part vers les vrais destinataires, **depuis l'adresse @gong-galaxy.com de la personne qui a déployé l'app** (l'app tourne en `executeAs: USER_DEPLOYING`), et apparaît dans ses « Envoyés » Gmail. Préviens l'utilisateur avant d'activer l'envoi : les destinataires verront **son nom** comme expéditeur, et leurs réponses arriveront **dans sa boîte**.
+- **En DEV**, il part **uniquement vers le développeur**, avec « [DEV] » dans l'objet et les vrais destinataires indiqués en tête du message : un test ne peut jamais atteindre une vraie personne.
+
+Aucune clé, aucun secret, aucun réglage chez un prestataire.
 
 ```js
-/* ============ RECIPE: EMAIL (Google MailApp, sent from the deploying user's address) ============ */
-// No API key, no secret: Apps Script sends through Google directly. The web app runs as the
-// person who deployed it (executeAs USER_DEPLOYING), so every e-mail leaves FROM THAT PERSON'S
-// ADDRESS and lands in their Gmail "Sent" folder.
-// Use MailApp, NOT GmailApp: MailApp only asks for "send e-mail as you", while GmailApp asks
-// for full read/delete access to the mailbox, far more than sending needs.
+/* ============ RECIPE: NOTIFICATIONS (every e-mail goes through notify_) ============ */
+// PROD: sent to the real recipients, FROM the address of the person who deployed the app.
+// DEV: ALWAYS redirected to the developer (developerEmail_ in Env.js), subject prefixed with
+// [DEV] and the real recipients listed at the top: a test can never reach a real person.
+// NEVER call MailApp/GmailApp anywhere else. Use MailApp, NOT GmailApp: MailApp only asks for
+// "send e-mail as you", while GmailApp asks for full read/delete access to the mailbox.
 // Quota: about 1,500 recipients per day per Workspace account (MailApp.getRemainingDailyQuota()).
 
-// Send one e-mail. Returns true on success, false if today's quota is used up.
-function sendEmail_(to, subject, htmlBody) {
+// to: one address or an array of addresses. Returns true on success, false if today's quota
+// is used up.
+function notify_(to, subject, htmlBody) {
+  let recipients = [].concat(to).join(',');
+  if (isDev_()) {
+    htmlBody = '<p><strong>[DEV]</strong> Destinataires réels : ' + escapeHtml_(recipients) + '</p><hr>' + htmlBody;
+    subject = '[DEV] ' + subject;
+    recipients = developerEmail_();
+  }
   if (MailApp.getRemainingDailyQuota() < 1) return false;
-  MailApp.sendEmail({
-    to: to,
-    subject: subject,
-    htmlBody: htmlBody
-    // name: APP_NAME,                  // optional: sender display name instead of the user's name
-    // replyTo: 'x@gong-galaxy.com',    // optional: where replies should go
-  });
+  MailApp.sendEmail({ to: recipients, subject: subject, htmlBody: htmlBody });
   return true;
 }
 
-// Run once from the editor to grant the "send e-mail" permission (rule 9). The test goes to
-// YOU (the account running it), never to real recipients: check your own inbox.
-function testEmail() {
-  const me = Session.getEffectiveUser().getEmail();
-  Logger.log(sendEmail_(me, 'Test ' + APP_NAME, '<p>Ceci est un test.</p>') ? 'Envoyé à ' + me : 'Quota du jour atteint');
+function escapeHtml_(text) {
+  return String(text).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+// TEST (DEV only). Run it once from the DEV editor to grant the "send e-mail" permission
+// (rule 9), then check your inbox: the message is redirected to you. Before the first PROD
+// publication that sends e-mail, run it once from the PROD editor too: Google asks for the
+// permission, then the function refuses to go further (normal, it is a test).
+function testNotify() {
+  requireDev_();
+  Logger.log(notify_('destinataire.reel@gong-galaxy.com', 'Test ' + APP_NAME, '<p>Ceci est un test.</p>') ? 'Envoyé (redirigé vers toi)' : 'Quota du jour atteint');
 }
 ```
 
@@ -530,35 +664,41 @@ function testEmail() {
 
 | Symptôme | Cause | Solution |
 |---|---|---|
-| Données « vides » alors que le Sheet est rempli | `getActiveSpreadsheet()` vise le mauvais classeur | Toujours ouvrir par ID (`openById`, règle n°6) |
+| Données « vides » alors que le Sheet est rempli | `getActiveSpreadsheet()` vise le mauvais classeur | Toujours passer par `envSpreadsheet_()` (règle n°6) |
 | Une liste arrive `null` dans le navigateur | `google.script.run` sérialise mal les tableaux d'objets | Renvoyer une **chaîne JSON**, `JSON.parse` côté client (règle n°7) |
 | L'app rame | Trop d'appels au Sheet | Lire/écrire **par lots**, cacher les listes (§6) |
 | `/exec` en erreur d'autorisation après une modif | Nouveau scope OAuth non accepté | Tester dans l'éditeur, accepter, **puis** redéployer (règle n°9) |
-| Une modif n'apparaît pas pour les utilisateurs | `clasp push` seul ne publie pas | `version` **puis** `redeploy` (§4) |
+| Une modif n'apparaît pas pour les utilisateurs | `clasp push` seul ne publie pas ; et la PROD ne change que sur demande | En DEV : `version` **puis** `redeploy` DEV. En PROD : passage en PROD (§4), sur demande de l'utilisateur |
 | L'appareil affiche l'ancien code après un redeploy | Cache navigateur | Ouvrir l'URL avec `?cb=1` |
-| L'URL publique a changé (QR/liens morts) | `clasp deploy` a créé un **nouveau** déploiement | Toujours `redeploy` le même `DEPLOYMENT_ID` (règle n°2) |
+| L'URL publique a changé (QR/liens morts) | `clasp deploy` a créé un **nouveau** déploiement | Toujours `redeploy` `DEPLOYMENT_ID_DEV` ou `DEPLOYMENT_ID_PROD` (règle n°2) ; signaler le déploiement en trop à FX, ne pas le supprimer soi-même |
 | Fonction qui pollue le menu *Exécuter* | Fonction « publique » | Suffixer son nom par `_` → privée |
 | `git push` refusé (identifiants) | git ne connaît pas tes identifiants GitHub | `gh auth login` **puis** `gh auth setup-git` (§2) |
 | Fuseau « New York » / `access DOMAIN` disparu après `clasp create` | `clasp create` écrase `appsscript.json` par sa version par défaut | `git restore appsscript.json` juste après `clasp create`, avant `clasp push` (§3, A3) |
 | Toute l'app en erreur `ReferenceError: HTMLElement is not defined` | `design-system/header.js` a été poussé comme code **serveur** (`.claspignore` absent ou modifié) | Remettre `.claspignore` (ligne `design-system/**`), vérifier avec `clasp status` que `design-system/` n'est plus listé, puis `clasp push` (le push remplace tout le contenu côté Google : le fichier fautif disparaît) |
 | `node`, `clasp`, `brew` ou `gh` : « command not found » | Homebrew (Mac Apple Silicon) absent du PATH | Ligne `brew shellenv` dans `~/.zprofile`, puis quitter (Cmd+Q) et rouvrir l'app Claude (§2) |
 | Premier `git commit` refusé : « Please tell me who you are » | Identité Git jamais configurée sur ce poste | `git config --global user.name` / `user.email` (§2) |
+| Toute l'app en erreur « Environnement inconnu (projet …) » | `ENVIRONMENTS` (`Env.js`) pas renseigné, ou projet copié (nouvel ID) | Renseigner les deux Script IDs dans `Env.js`, puis republier. Un projet copié n'est **ni** DEV **ni** PROD tant qu'on ne l'a pas déclaré |
+| « Fonction réservée à l'environnement DEV » | Fonction de test appelée en PROD | Normal : `requireDev_()` fait son travail (règle n°11) |
+| Une modif faite dans l'éditeur Apps Script a disparu | La publication suivante a écrasé le code en ligne par celui de Git | Ne jamais modifier dans l'éditeur (règle n°3) ; retrouver la modif dans l'historique des versions de l'éditeur si besoin |
+| Un test a envoyé un e-mail à une vraie personne | Envoi direct par `MailApp`/`GmailApp`, hors `notify_()` | Tout envoi passe par `notify_()` (§8.a) ; chercher `MailApp\|GmailApp` dans le code |
 
 ---
 
 ## 10. Checklist avant de dire « c'est prêt »
 
-- [ ] `clasp push` sans erreur, testé sur l'URL **/dev**.
+- [ ] **DEV** : `clasp push` sans erreur, `clasp version` + `clasp redeploy <DEPLOYMENT_ID_DEV>` faits, testé avec l'utilisateur sur l'adresse DEV.
+- [ ] **PROD** (seulement si l'utilisateur l'a demandé) : le **même commit** que le DEV, `clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD>` fait, adresse PROD vérifiée, étiquette `prod-vX` poussée.
+- [ ] Toujours **exactement deux** déploiements : aucun `clasp deploy` en dehors de la mise en place (règle n°2).
 - [ ] `git commit` + `git push` faits (le code est sur GitHub).
-- [ ] `clasp version` créé, `clasp redeploy <DEPLOYMENT_ID> -V <num>` fait - **/exec** fonctionne.
-- [ ] `APP_VERSION` (dans `Code.js`) = numéro de la version publiée, et **visible en pied de page** de l'app.
-- [ ] L'interface respecte la **charte graphique** (`design-system/` : `brand.css` + `<app-header>` + tokens `--gg-*`), **sobre**, **responsive** (testée sur mobile), en-tête avec l'utilisateur connecté.
+- [ ] `APP_VERSION` (dans `Code.js`) = numéro publié, **visible en pied de page** ; « · DEV » affiché en DEV seulement.
+- [ ] **Règle n°11** : tous les e-mails passent par `notify_()` ; toute fonction de test, de debug ou de « voir en tant que » commence par `requireDev_()` ; bandeau DEV visible en DEV, absent en PROD.
+- [ ] L'interface respecte la **charte graphique** (`design-system/` : `brand.css` + `<app-header>` + tokens `--gg-*`), **sobre**, **responsive** (testée sur mobile), en-tête avec l'utilisateur connecté. Seule exception : design hors charte choisi par l'utilisateur, noté dans `DEPLOY.md` (B6.c).
 - [ ] Aucun secret dans le code / Git ; tout en **Propriétés du script**. Tout doute sur un secret a été signalé à `dev@gong-galaxy.com` (règle n°1).
 - [ ] Onglets du Sheet auto-créés ; personnes/droits/données modifiables **sans redéployer**.
-- [ ] Appels au Sheet **par lots** ; listes chaudes **cachées** (§6).
+- [ ] Appels au Sheet **par lots**, via `envSpreadsheet_()` ; listes chaudes **cachées** (§6).
 - [ ] Commentaires de code en anglais, textes visibles en français.
-- [ ] `DEPLOY.md` à jour (script ID, sheet ID, **deployment ID**, URL /exec, repo GitHub).
-- [ ] Si e-mail/Drive : autorisation acceptée dans l'éditeur **avant** le redeploy.
+- [ ] `DEPLOY.md` à jour (DEV et PROD : Script ID, Sheet, **deployment ID**, adresse ; dépôt GitHub).
+- [ ] Si e-mail/Drive : autorisation acceptée dans l'éditeur (DEV, puis PROD) **avant** le redeploy correspondant.
 
 ---
 
@@ -566,8 +706,10 @@ function testEmail() {
 
 Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 
-- **créer ou supprimer un déploiement** (au-delà du tout premier), ou tout changement
-  susceptible de **modifier l'URL publique** ;
+- **créer ou supprimer un déploiement** (au-delà des deux de la mise en place, DEV et PROD),
+  ou tout changement susceptible de **modifier une adresse publique** ;
+- **reprise d'un projet existant (Parcours B)** : plusieurs adresses réellement utilisées (on en
+  garde une comme PROD, FX décide des autres), ou le moindre doute sur ce qui pourrait être perdu ;
 - **e-mail** : besoin d'envoyer depuis une **adresse générique** (`noreply@`, adresse de service) plutôt que celle de l'utilisateur, ou volumes proches du quota Google (~1 500 destinataires par jour) ;
 - **secret ou clé API** (besoin d'une clé, secret trouvé dans le code, secret potentiellement fuité) : ce n'est **pas** FX mais la **règle n°1** : question à l'utilisateur, puis e-mail à **`dev@gong-galaxy.com`** au moindre doute (§7) ;
 - passage envisagé en `access: ANYONE` (app ouverte hors domaine) ;
@@ -583,7 +725,8 @@ NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) 
     <REF>=main         ✓ renseigné (branche/tag servant bootstrap.sh)
   Renseignés par le collaborateur au bootstrap :
     <TON_PRÉNOM>, <ID_DOSSIER_PERSO_DRIVE>, <ID_DU_SOUS_DOSSIER_DRIVE>,
-    <URL_OU_ID_DU_GOOGLE_SHEET>, <SCRIPT_ID>, <DEPLOYMENT_ID>, <URL_EXEC>, <URL_DU_REPO_GITHUB>
+    <SCRIPT_ID_DEV|PROD>, <URL_OU_ID_SHEET_DEV|PROD> (Env.js + DEPLOY.md),
+    <DEPLOYMENT_ID_DEV|PROD>, <URL_EXEC_DEV|PROD>, <URL_DU_REPO_GITHUB>
   Côté FX, une fois :
     - créer l'org GitHub (owner dev@), publier gongsup1/appsscript-starter-kit en PUBLIC,
       le marquer "Template repository", autoriser les membres à créer des repos privés,
