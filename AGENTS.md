@@ -34,8 +34,9 @@ En permanence :
 - **Demande confirmation AVANT toute action irréversible côté Google/GitHub** : premier
   déploiement, suppression d'un fichier/onglet Drive, envoi d'un **vrai** e-mail à
   des destinataires réels (teste d'abord sur toi-même). Un dépôt public est **interdit** (règle 10).
-- Si quelque chose sort du périmètre (nouveau scope sensible, changement d'URL publique,
-  doute sur un secret) → **arrête-toi et renvoie vers FX** (§11).
+- Si quelque chose sort du périmètre (nouveau scope sensible, changement d'URL publique)
+  → **arrête-toi et renvoie vers FX** (§11). **Secret ou clé API** → **règle n°1** (question à
+  l'utilisateur, e-mail à `dev@gong-galaxy.com` au moindre doute).
 - **Respecte les 10 règles d'or ci-dessous sans exception.**
 
 ### ⚠️ Ordre impératif au démarrage
@@ -62,10 +63,11 @@ projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit fa
 
 ## 1. Les 10 règles d'or (non négociables)
 
-1. **Secrets → jamais dans le code ni dans Git.** Clés API, mots de passe vivent dans les
-   **Propriétés du script** (valeur **transmise par FX**, jamais inventée ni recopiée ailleurs).
+1. **Secrets → jamais dans le code ni dans Git.** Clés API, mots de passe, jetons vivent dans les
+   **Propriétés du script** (valeur jamais inventée ni recopiée ailleurs).
    Voir §7. *Une clé committée reste dans l'historique Git pour toujours,
    et se fait révoquer automatiquement → panne silencieuse.*
+   **Dès qu'un secret ou une clé API entre en jeu** (trouvé dans le code, demandé pour une fonctionnalité, collé par l'utilisateur, sur le point d'être committé) : **arrête-toi et demande à l'utilisateur s'il est absolument certain qu'il n'y a aucun risque**. Seul un « oui » franc, avec une raison claire (ex. : c'est un identifiant public, pas un vrai secret), permet de continuer. **Au moindre doute**, le sien ou le tien : aucun commit, aucun push, et **fais envoyer un e-mail à `dev@gong-galaxy.com`** (procédure au §7).
 2. **Toujours redéployer LE MÊME déploiement.** L'URL publique `/exec` peut être imprimée
    (QR codes, liens). Le **tout premier** `clasp deploy` est le **seul** ; ensuite,
    **uniquement** `clasp redeploy <DEPLOYMENT_ID>`. ❌ Jamais un nouveau déploiement,
@@ -242,7 +244,13 @@ plusieurs, demande à l'utilisateur **quelle URL `/exec` est celle utilisée/imp
 son **DEPLOYMENT_ID** dans `DEPLOY.md`. ⚠️ **NE crée PAS de nouveau déploiement** : les futures
 publications se feront avec `clasp redeploy <DEPLOYMENT_ID>` (§4), pour garder l'URL intacte.
 
-**B4. Git + GitHub** (l'IA) - mettre le projet existant sous versionnement, sans toucher au code :
+**B4. Git + GitHub** (l'IA) - mettre le projet existant sous versionnement, sans toucher au code.
+
+**D'abord, cherche les secrets écrits en dur.** Une app construite hors du kit contient souvent une clé ou un mot de passe directement dans le code ; une fois committé, il resterait dans l'historique pour toujours.
+```bash
+grep -rnIiE "api[_-]?key|apikey|secret|token|passw|bearer|authorization|sk-[A-Za-z0-9]|AIza[0-9A-Za-z_-]{20}|xox[abp]-|ghp_" --include='*.js' --include='*.gs' --include='*.html' --include='*.json' --exclude=Styles.html --exclude=Header.html --exclude-dir=design-system --exclude-dir=.git .
+```
+Examine chaque résultat (beaucoup sont de faux positifs : un commentaire, un `getProperty('...')`). Pour chaque **vrai** secret, applique la **règle n°1** avant tout commit. Puis :
 ```bash
 git init -b main && git add -A
 git commit -m "chore: import du projet existant + standards GONG"
@@ -436,15 +444,26 @@ Les secrets vivent dans les **Propriétés du script** - l'équivalent Apps Scri
 d'environnement : **ni `clasp`, ni l'API, ni toi (l'IA) ne pouvez les écrire**. Tu prépares tout
 le reste ; **coller la valeur est le SEUL geste humain** - et tu le **guides pas à pas**.
 
-**Secrets de ce kit : aucun pour l'instant.** L'e-mail (§8.a) passe par Google sans clé. La façon de **transmettre** une clé API à un collaborateur n'est pas encore définie : si l'app a besoin d'une clé ou d'un mot de passe (API externe, service tiers), **arrête-toi et renvoie vers FX** (§11) avant d'écrire la moindre ligne qui l'utilise. Ne propose **jamais** de contournement (clé dans le code, dans un onglet du Sheet, dans un fichier non suivi par Git…).
+**Secrets de ce kit : aucun pour l'instant.** L'e-mail (§8.a) passe par Google sans clé. La façon de **transmettre** une clé API à un collaborateur n'est pas encore définie : si l'app a besoin d'une clé ou d'un mot de passe (API externe, service tiers), **arrête-toi et applique la règle n°1** avant d'écrire la moindre ligne qui l'utilise. Ne propose **jamais** de contournement (clé dans le code, dans un onglet du Sheet, dans un fichier non suivi par Git…).
 
-**Poser une clé (seulement quand FX en a fourni une) - déroule ces étapes AVEC l'utilisateur**, à voix haute, une par une :
+**Au moindre doute : e-mail à `dev@gong-galaxy.com`.** Tu ne peux pas envoyer d'e-mail toi-même : tu le **rédiges**, l'utilisateur l'**envoie** depuis sa boîte Gmail.
+
+- **Objet** : `[Vibe coding] Secret à vérifier : <nom-du-projet>`.
+- **Contenu** : qui écrit, le projet (nom + dépôt GitHub s'il existe), **où** se trouve le secret (fichier et ligne) ou quelle fonctionnalité en demande un, **de quel type** il s'agit (clé API de quel service, mot de passe, jeton), **à quoi** il sert, et ce qui a déjà été fait (rien committé ? déjà sur GitHub ?).
+- **Jamais la valeur du secret dans l'e-mail**, même partielle.
+- Ouvre le brouillon pré-rempli dans Gmail (objet et corps encodés pour une URL), puis dis à l'utilisateur de le relire et de cliquer sur **Envoyer** :
+  ```bash
+  open "https://mail.google.com/mail/?view=cm&fs=1&to=dev@gong-galaxy.com&su=<objet-encodé>&body=<corps-encodé>"
+  ```
+- Tant que `dev@gong-galaxy.com` n'a pas répondu : **aucun commit, aucun push, aucune ligne de code** qui utilise ce secret. Le reste du travail peut continuer s'il n'en dépend pas.
+
+**Poser une clé (seulement si l'utilisateur est absolument certain qu'il n'y a aucun risque, ou avec le feu vert de `dev@gong-galaxy.com`) - déroule ces étapes AVEC l'utilisateur**, à voix haute, une par une :
 
 1. Ouvre l'éditeur : `clasp open-script` (ou <https://script.google.com>).
 2. En bas à gauche : ⚙️ **Paramètres du projet**.
 3. Section **Propriétés du script** → **Ajouter une propriété de script**.
 4. **Propriété** (le nom, à taper **exactement**) : le nom convenu avec FX (ex. `NOM_API_KEY`).
-5. **Valeur** : **colle** la valeur transmise par FX. Jamais tapée à la main, jamais notée ailleurs, et **jamais collée dans la conversation avec l'IA** (elle partirait chez le fournisseur de l'IA).
+5. **Valeur** : **colle** la valeur. Jamais tapée à la main, jamais notée ailleurs, et **jamais collée dans la conversation avec l'IA** (elle partirait chez le fournisseur de l'IA).
 6. **Enregistrer les propriétés du script**. L'app la lira seule via `PropertiesService`.
 
 Dans le code, lire ainsi (jamais la valeur en dur) :
@@ -454,7 +473,7 @@ const KEY = PropertiesService.getScriptProperties().getProperty('NOM_API_KEY') |
 
 **Jamais** de valeur de secret dans un fichier suivi par Git, un message, un README : une clé
 committée reste dans l'historique **et se fait révoquer** → panne silencieuse. En cas de fuite →
-**préviens FX immédiatement** (révocation + régénération ; supprimer le fichier ne suffit pas).
+**fais écrire immédiatement à `dev@gong-galaxy.com`** (même procédure : révocation + régénération ; supprimer le fichier ne suffit pas).
 
 ---
 
@@ -497,7 +516,7 @@ function testEmail() {
 }
 ```
 
-> **Pas de SMS pour l'instant.** Le kit n'a pas de recette SMS : tout service d'envoi de SMS demande une clé API, et leur transmission n'est pas encore définie (§7). Besoin de SMS → renvoie vers FX (§11), n'improvise pas de solution.
+> **Pas de SMS pour l'instant.** Le kit n'a pas de recette SMS : tout service d'envoi de SMS demande une clé API, et leur transmission n'est pas encore définie (§7). Besoin de SMS → **règle n°1** (e-mail à `dev@gong-galaxy.com`), n'improvise pas de solution.
 
 ---
 
@@ -528,7 +547,7 @@ function testEmail() {
 - [ ] `clasp version` créé, `clasp redeploy <DEPLOYMENT_ID> -V <num>` fait - **/exec** fonctionne.
 - [ ] `APP_VERSION` (dans `Code.js`) = numéro de la version publiée, et **visible en pied de page** de l'app.
 - [ ] L'interface respecte la **charte graphique** (`design-system/` : `brand.css` + `<app-header>` + tokens `--gg-*`), **sobre**, **responsive** (testée sur mobile), en-tête avec l'utilisateur connecté.
-- [ ] Aucun secret dans le code / Git ; tout en **Propriétés du script** (valeurs transmises par FX).
+- [ ] Aucun secret dans le code / Git ; tout en **Propriétés du script**. Tout doute sur un secret a été signalé à `dev@gong-galaxy.com` (règle n°1).
 - [ ] Onglets du Sheet auto-créés ; personnes/droits/données modifiables **sans redéployer**.
 - [ ] Appels au Sheet **par lots** ; listes chaudes **cachées** (§6).
 - [ ] Commentaires de code en anglais, textes visibles en français.
@@ -544,7 +563,7 @@ Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 - **créer ou supprimer un déploiement** (au-delà du tout premier), ou tout changement
   susceptible de **modifier l'URL publique** ;
 - **e-mail** : besoin d'envoyer depuis une **adresse générique** (`noreply@`, adresse de service) plutôt que celle de l'utilisateur, ou volumes proches du quota Google (~1 500 destinataires par jour) ;
-- **besoin d'une clé API ou d'un mot de passe** (API externe, SMS, service tiers : leur transmission n'est pas encore définie), ou **secret potentiellement fuité** ;
+- **secret ou clé API** (besoin d'une clé, secret trouvé dans le code, secret potentiellement fuité) : ce n'est **pas** FX mais la **règle n°1** : question à l'utilisateur, puis e-mail à **`dev@gong-galaxy.com`** au moindre doute (§7) ;
 - passage envisagé en `access: ANYONE` (app ouverte hors domaine) ;
 - **accès manquant** : invitation à l'org GitHub, droit d'écriture sur le dépôt d'un collègue (Parcours C), script ou Sheet non partagé en « Éditeur » ;
 - doute sur quoi que ce soit d'**irréversible** côté Google ou GitHub.
