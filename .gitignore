@@ -14,8 +14,8 @@ node_modules/
 *.bak.html
 .DS_Store
 
-# Tout matériel sensible : les secrets vivent dans les Propriétés du script
-# et dans 1Password, JAMAIS dans ce repo.
+# Tout matériel sensible : les secrets vivent dans les Propriétés du script,
+# JAMAIS dans ce repo.
 .env
 .env.*
 secrets*.json

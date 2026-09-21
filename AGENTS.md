@@ -32,7 +32,7 @@ En permanence :
   - son seul geste « fichier » est de **coller une valeur de secret** dans l'éditeur (§7), que tu
   guides pas à pas.
 - **Demande confirmation AVANT toute action irréversible côté Google/GitHub** : premier
-  déploiement, suppression d'un fichier/onglet Drive, envoi d'un **vrai** SMS/e-mail à
+  déploiement, suppression d'un fichier/onglet Drive, envoi d'un **vrai** e-mail à
   des destinataires réels (teste d'abord sur toi-même). Un dépôt public est **interdit** (règle 10).
 - Si quelque chose sort du périmètre (nouveau scope sensible, changement d'URL publique,
   doute sur un secret) → **arrête-toi et renvoie vers FX** (§11).
@@ -63,7 +63,7 @@ projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit fa
 ## 1. Les 10 règles d'or (non négociables)
 
 1. **Secrets → jamais dans le code ni dans Git.** Clés API, mots de passe vivent dans les
-   **Propriétés du script** (valeurs prises dans **1Password**, coffre `Vibe-coding`).
+   **Propriétés du script** (valeur **transmise par FX**, jamais inventée ni recopiée ailleurs).
    Voir §7. *Une clé committée reste dans l'historique Git pour toujours,
    et se fait révoquer automatiquement → panne silencieuse.*
 2. **Toujours redéployer LE MÊME déploiement.** L'URL publique `/exec` peut être imprimée
@@ -436,27 +436,20 @@ Les secrets vivent dans les **Propriétés du script** - l'équivalent Apps Scri
 d'environnement : **ni `clasp`, ni l'API, ni toi (l'IA) ne pouvez les écrire**. Tu prépares tout
 le reste ; **coller la valeur est le SEUL geste humain** - et tu le **guides pas à pas**.
 
-**Secrets de ce kit :**
+**Secrets de ce kit : aucun pour l'instant.** L'e-mail (§8.a) passe par Google sans clé. La façon de **transmettre** une clé API à un collaborateur n'est pas encore définie : si l'app a besoin d'une clé ou d'un mot de passe (API externe, service tiers), **arrête-toi et renvoie vers FX** (§11) avant d'écrire la moindre ligne qui l'utilise. Ne propose **jamais** de contournement (clé dans le code, dans un onglet du Sheet, dans un fichier non suivi par Git…).
 
-| Clé (= nom de la Propriété) | Sert à | Valeur | Requis ? |
-|---|---|---|---|
-| `BREVO_API_KEY` | Envoi de SMS via Brevo (§8.b) | 1Password, coffre `Vibe-coding` → la clé Brevo **attribuée à l'utilisateur** (créée par le service informatique) | Oui si SMS |
-
-L'**e-mail** (§8.a) n'a besoin d'**aucun** secret : il passe par Google directement.
-
-**Poser une clé - déroule ces étapes AVEC l'utilisateur**, à voix haute, une par une :
+**Poser une clé (seulement quand FX en a fourni une) - déroule ces étapes AVEC l'utilisateur**, à voix haute, une par une :
 
 1. Ouvre l'éditeur : `clasp open-script` (ou <https://script.google.com>).
 2. En bas à gauche : ⚙️ **Paramètres du projet**.
 3. Section **Propriétés du script** → **Ajouter une propriété de script**.
-4. **Propriété** (le nom, à taper **exactement**) : `BREVO_API_KEY`.
-5. **Valeur** : ouvre **1Password** → coffre `Vibe-coding` → la clé Brevo attribuée à l'utilisateur,
-   copie-la et **colle-la** (jamais tapée à la main, jamais notée ailleurs). Pas encore de clé ? → service informatique.
+4. **Propriété** (le nom, à taper **exactement**) : le nom convenu avec FX (ex. `NOM_API_KEY`).
+5. **Valeur** : **colle** la valeur transmise par FX. Jamais tapée à la main, jamais notée ailleurs, et **jamais collée dans la conversation avec l'IA** (elle partirait chez le fournisseur de l'IA).
 6. **Enregistrer les propriétés du script**. L'app la lira seule via `PropertiesService`.
 
 Dans le code, lire ainsi (jamais la valeur en dur) :
 ```js
-const KEY = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || '';
+const KEY = PropertiesService.getScriptProperties().getProperty('NOM_API_KEY') || '';
 ```
 
 **Jamais** de valeur de secret dans un fichier suivi par Git, un message, un README : une clé
@@ -504,58 +497,7 @@ function testEmail() {
 }
 ```
 
-### 8.b - Alerte SMS (Brevo) - pack complet (envoi + contrôle quotidien + repli e-mail)
-
-```js
-/* ============ RECIPE: SMS ALERT (Brevo) + DAILY CHECK + EMAIL FALLBACK ============ */
-// API key lives in Script Properties (BREVO_API_KEY), value copied from 1Password.
-// NEVER hard-code it: a committed key gets auto-revoked → silent SMS outage.
-const BREVO_API_KEY = (function () {
-  try { return PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || ''; }
-  catch (e) { return ''; }
-})();
-const BREVO_SMS_URL = 'https://api.brevo.com/v3/transactionalSMS/sms';
-const SMS_SENDER    = 'GONG';                // alphanumeric sender, max 11 chars
-const ALERT_EMAIL   = 'fxd@gong-galaxy.com'; // fallback when NO SMS can be sent
-
-// Send one SMS. Returns true on success. A French mobile "06…" is normalised to "336…".
-// Falls back to an alert e-mail if the key is missing or the API call fails.
-function sendSms_(phone, content) {
-  if (!BREVO_API_KEY) {
-    MailApp.sendEmail(ALERT_EMAIL, 'SMS non envoyé (clé absente)', content);
-    return false;
-  }
-  var recipient = String(phone).replace(/\D/g, '').replace(/^0/, '33');
-  var res = UrlFetchApp.fetch(BREVO_SMS_URL, {
-    method: 'post',
-    contentType: 'application/json',
-    headers: { 'api-key': BREVO_API_KEY },
-    muteHttpExceptions: true,
-    payload: JSON.stringify({
-      type: 'transactional', unicodeEnabled: false,
-      sender: SMS_SENDER, recipient: recipient, content: content
-    })
-  });
-  var ok = res.getResponseCode() < 300;
-  if (!ok) MailApp.sendEmail(ALERT_EMAIL, 'Échec envoi SMS', res.getContentText());
-  return ok;
-}
-
-// Target of the daily trigger. Put your condition here (e.g. "today's action is missing
-// → alert every manager listed in a Sheet tab").
-function dailyCheck() {
-  // TODO: implement the condition, then call sendSms_(number, message) as needed.
-}
-
-// Run once from the editor (accept the authorisation) to install the daily trigger.
-// Removes any existing copy first so triggers never pile up.
-function setupDailyTrigger() {
-  ScriptApp.getProjectTriggers().forEach(function (t) {
-    if (t.getHandlerFunction() === 'dailyCheck') ScriptApp.deleteTrigger(t);
-  });
-  ScriptApp.newTrigger('dailyCheck').timeBased().atHour(20).everyDays(1).create();
-}
-```
+> **Pas de SMS pour l'instant.** Le kit n'a pas de recette SMS : tout service d'envoi de SMS demande une clé API, et leur transmission n'est pas encore définie (§7). Besoin de SMS → renvoie vers FX (§11), n'improvise pas de solution.
 
 ---
 
@@ -586,12 +528,12 @@ function setupDailyTrigger() {
 - [ ] `clasp version` créé, `clasp redeploy <DEPLOYMENT_ID> -V <num>` fait - **/exec** fonctionne.
 - [ ] `APP_VERSION` (dans `Code.js`) = numéro de la version publiée, et **visible en pied de page** de l'app.
 - [ ] L'interface respecte la **charte graphique** (`design-system/` : `brand.css` + `<app-header>` + tokens `--gg-*`), **sobre**, **responsive** (testée sur mobile), en-tête avec l'utilisateur connecté.
-- [ ] Aucun secret dans le code / Git ; tout en **Propriétés du script** (valeurs 1Password).
+- [ ] Aucun secret dans le code / Git ; tout en **Propriétés du script** (valeurs transmises par FX).
 - [ ] Onglets du Sheet auto-créés ; personnes/droits/données modifiables **sans redéployer**.
 - [ ] Appels au Sheet **par lots** ; listes chaudes **cachées** (§6).
 - [ ] Commentaires de code en anglais, textes visibles en français.
 - [ ] `DEPLOY.md` à jour (script ID, sheet ID, **deployment ID**, URL /exec, repo GitHub).
-- [ ] Si e-mail/SMS/Drive : autorisation acceptée dans l'éditeur **avant** le redeploy.
+- [ ] Si e-mail/Drive : autorisation acceptée dans l'éditeur **avant** le redeploy.
 
 ---
 
@@ -602,7 +544,7 @@ Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 - **créer ou supprimer un déploiement** (au-delà du tout premier), ou tout changement
   susceptible de **modifier l'URL publique** ;
 - **e-mail** : besoin d'envoyer depuis une **adresse générique** (`noreply@`, adresse de service) plutôt que celle de l'utilisateur, ou volumes proches du quota Google (~1 500 destinataires par jour) ;
-- **valeur de secret** à obtenir/renouveler (1Password), ou **secret potentiellement fuité** ;
+- **besoin d'une clé API ou d'un mot de passe** (API externe, SMS, service tiers : leur transmission n'est pas encore définie), ou **secret potentiellement fuité** ;
 - passage envisagé en `access: ANYONE` (app ouverte hors domaine) ;
 - **accès manquant** : invitation à l'org GitHub, droit d'écriture sur le dépôt d'un collègue (Parcours C), script ou Sheet non partagé en « Éditeur » ;
 - doute sur quoi que ce soit d'**irréversible** côté Google ou GitHub.
@@ -614,7 +556,6 @@ NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) 
   Placeholders du template :
     <ORG>=gongsup1     ✓ renseigné (org GitHub, owner dev@gong-galaxy.com)
     <REF>=main         ✓ renseigné (branche/tag servant bootstrap.sh)
-    <VAULT_1PASSWORD>=Vibe-coding  ✓ renseigné (coffre 1Password ; clé Brevo par utilisateur autorisé, créée par le service info)
   Renseignés par le collaborateur au bootstrap :
     <TON_PRÉNOM>, <ID_DOSSIER_PERSO_DRIVE>, <ID_DU_SOUS_DOSSIER_DRIVE>,
     <URL_OU_ID_DU_GOOGLE_SHEET>, <SCRIPT_ID>, <DEPLOYMENT_ID>, <URL_EXEC>, <URL_DU_REPO_GITHUB>
@@ -622,6 +563,6 @@ NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) 
     - créer l'org GitHub (owner dev@), publier gongsup1/appsscript-starter-kit en PUBLIC,
       le marquer "Template repository", autoriser les membres à créer des repos privés,
       inviter les collaborateurs comme membres ;
-    - Brevo : SMS uniquement (les e-mails partent par MailApp, depuis l'adresse du
-      collaborateur).
+    - e-mails : MailApp, depuis l'adresse du collaborateur (rien à configurer) ;
+    - clés API (SMS, services tiers) : mode de transmission aux collaborateurs à définir.
 -->

@@ -58,7 +58,7 @@ Sheet, déploiement, puis itérations.
 
 - **Le Sheet est la source de vérité** : données *et* droits, onglets auto-créés,
   modifiables sans redéployer.
-- **Secrets jamais dans le code ni Git** → Propriétés du script (valeurs depuis 1Password).
+- **Secrets jamais dans le code ni Git** → Propriétés du script (aucun secret dans le kit pour l'instant).
 - **Toujours redéployer le même déploiement** : l'URL `/exec` ne change jamais.
 - **Double versioning** : Git (le code) + Apps Script (`version`/`redeploy`).
 - **Code commenté en anglais, doc et interface en français.**
@@ -82,9 +82,6 @@ Node + `clasp` (≥ 3.3), `git`, `gh` (GitHub CLI). Un compte Google Workspace
   d'install pointe sur `raw.githubusercontent.com/gongsup1/appsscript-starter-kit/main/bootstrap.sh`.
 - **Dossiers Drive** : créer un dossier attitré par collaborateur, lui donner l'accès en
   écriture, et lui transmettre l'**ID** du dossier.
-- **1Password** : ranger les clés/API (ex. Brevo) dans le coffre `Vibe-coding` et
-  donner l'accès aux personnes concernées. Les valeurs se recopient dans les Propriétés du
-  script de chaque projet, jamais dans le repo.
 - **E-mail** : rien à mettre en place. Les apps envoient avec `MailApp` (service Google natif), **depuis l'adresse du collaborateur** qui a déployé l'app. Quota Google : environ 1 500 destinataires par jour et par compte.
-- **SMS (Brevo)** : les apps envoient via **un seul compte Brevo GONG**. Le **service informatique** crée **une clé API Brevo par utilisateur autorisé** et la range dans `Vibe-coding` (collée dans les Propriétés du script de ses projets, jamais dans le repo).
-- **Placeholders** : tous renseignés : `<ORG>`=`gongsup1`, `<REF>`=`main`, `<VAULT_1PASSWORD>`=`Vibe-coding`.
+- **Clés API** (SMS, services tiers) : pas dans le kit pour l'instant. Le mode de transmission des clés aux collaborateurs reste à définir ; d'ici là, l'IA renvoie toute demande de ce type vers FX.
+- **Placeholders** : tous renseignés : `<ORG>`=`gongsup1`, `<REF>`=`main`.

@@ -16,9 +16,7 @@
 | URL publique `/exec` (ne change jamais) | `<URL_EXEC>` |
 | Repo GitHub | `<URL_DU_REPO_GITHUB>` |
 
-> 🔑 La **clé Brevo** (`BREVO_API_KEY`, pour les SMS) n'est **pas** un identifiant à noter ici : c'est un
-> **secret**. Elle vit dans les **Propriétés du script** (valeur depuis 1Password), jamais
-> dans ce fichier. Mode d'emploi : `AGENTS.md` §7.
+> 🔑 Les **secrets** (clés API, mots de passe) ne se notent **jamais** ici : ils vivent dans les **Propriétés du script**. Mode d'emploi : `AGENTS.md` §7.
 
 ## Publier une modification
 
@@ -35,5 +33,5 @@ clasp redeploy <DEPLOYMENT_ID> -V <num> -d "<NOM_DU_PROJET> - app web"   # 5. �
 
 - ❌ **Jamais** `clasp deploy` (créerait une **nouvelle** URL → liens/QR morts).
 - ❌ **Jamais** supprimer le déploiement `<DEPLOYMENT_ID>`.
-- ⚠️ Nouvelle capacité (e-mail, SMS, Drive) = nouveau scope OAuth : exécuter une fonction
+- ⚠️ Nouvelle capacité (e-mail, Drive…) = nouveau scope OAuth : exécuter une fonction
   de test dans l'éditeur et **accepter l'autorisation AVANT** l'étape 5 (voir `AGENTS.md` règle n°9).
