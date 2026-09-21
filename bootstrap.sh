@@ -265,12 +265,21 @@ progress "Lancement de l'assistant"
 PROMPT="Lis AGENTS.md et aide-moi a demarrer mon application (projet : $NAME, dossier : $DIR). Verifie d'abord que tu travailles bien dans ce dossier."
 case "$AI" in
   "Claude Code")
-    # Le point fragile pour un non-developpeur : ouvrir LE BON dossier dans l'app. Elle ne
-    # s'ouvre pas sur un dossier par script, donc on guide en deux temps via le presse-papier :
-    #   1) il contient le CHEMIN du dossier, a coller dans la fenetre de choix (Cmd+Shift+G) ;
-    #   2) puis la PHRASE de demarrage, a coller dans Claude.
-    # L'app garde ensuite le dossier dans ses "recents" : pas besoin de refaire ce parcours.
-    printf '%s' "$DIR" | pbcopy 2>/dev/null || true
+    # Lien de l'app Claude desktop qui ouvre une NOUVELLE session Code directement DANS le
+    # dossier du projet, avec la phrase de demarrage deja ecrite. C'est le lien qu'utilise l'app
+    # elle-meme pour son action Finder "New Claude Code Session Here" (claude://code/new?folder=).
+    # Il n'est pas documente publiquement : on garde un plan B manuel a l'ecran.
+    # Encodage pour URL fait comme l'app (encodeURIComponent via osascript, fourni par macOS).
+    urlencode() {
+      V="$1" osascript -l JavaScript \
+        -e 'ObjC.import("stdlib"); function run(){return encodeURIComponent($.getenv("V"))}'
+    }
+    DEEPLINK="claude://code/new?folder=$(urlencode "$DIR")&q=$(urlencode "$PROMPT")"
+    # Pour le plan B : la phrase reste disponible dans le presse-papier.
+    printf '%s' "$PROMPT" | pbcopy 2>/dev/null || true
+
+    say "Ouverture de ton projet dans l'app Claude..."
+    open "$DEEPLINK" 2>/dev/null || open -a "Claude" 2>/dev/null || true
     printf '\033[1;36m'
     cat <<EOF
 
@@ -278,40 +287,29 @@ case "$AI" in
    Ton projet est pret dans :
      $DIR
 
-   ETAPE 1/2 : ouvrir CE dossier dans l'app Claude
-   (son chemin est deja copie : tu n'as rien a taper)
-
-     1. Clique l'onglet   Code   (en haut). Pas Chat, pas Cowork :
-        seul l'onglet Code peut installer et publier ton app.
-     2. Clique   Select folder   : une fenetre de choix s'ouvre.
-     3. Appuie sur   Cmd + Shift + G   puis   Cmd + V   puis   Entree.
-     4. Tu es dans le dossier "$NAME". Ne clique sur RIEN d'autre :
-        clique directement le bouton de validation (Ouvrir / Select).
-  ============================================================
-EOF
-    printf '\033[0m'
-    read -rp $'\n\033[1;36m> Lis les 4 points ci-dessus, puis appuie sur Entree pour ouvrir l\'app Claude. \033[0m' _
-    open -a "Claude" 2>/dev/null || true
-    read -rp $'\n\033[1;36m> Quand ton dossier est ouvert dans Claude, reviens ici et appuie sur Entree. \033[0m' _
-    printf '%s' "$PROMPT" | pbcopy 2>/dev/null || true
-    printf '\033[1;36m'
-    cat <<EOF
-
-  ============================================================
-   ETAPE 2/2 : lancer l'assistant
-   La phrase de demarrage est maintenant copiee. Dans Claude :
-   clique dans la zone de saisie, Cmd + V, puis Entree.
-
-     "$PROMPT"
-
+   Claude s'ouvre sur ton projet (onglet Code), avec la phrase
+   de demarrage deja ecrite. Dans Claude :
+     - s'il demande de faire confiance a ce dossier : reponds oui ;
+     - puis appuie sur   Entree   pour lancer l'assistant.
    >>> Claude NE demarre PAS tout seul : c'est cette phrase,
        envoyee avec Entree, qui le met au travail.
+
+   Premiere utilisation de Claude ? Il te demande d'abord de te
+   connecter. Une fois connecte, si ton projet n'est pas affiche,
+   reviens ici et appuie sur Entree : on le rouvre.
+
+   Plan B, si ca ne marche toujours pas : dans Claude, onglet Code,
+   Select folder, choisis le dossier ci-dessus, puis colle la
+   phrase (Cmd + V, elle est deja copiee) et Entree.
 
    Pour REVENIR sur ce projet plus tard : ouvre l'app Claude,
    onglet Code, il est dans tes dossiers recents.
   ============================================================
 EOF
-    printf '\033[0m\n' ;;
+    printf '\033[0m'
+    read -rp $'\n\033[1;36m> Entree = rouvrir ton projet dans Claude. Si tout est bon, ferme simplement cette fenetre. \033[0m' _
+    open "$DEEPLINK" 2>/dev/null || true
+    printf '\n' ;;
   "Codex")
     say "Pret dans $DIR, lancement de Codex."
     exec codex "$PROMPT" ;;

@@ -13,14 +13,11 @@ collaborateurs **non-développeurs**.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/gongsup1/appsscript-starter-kit/main/bootstrap.sh)"
 ```
 
-Le script demande **quel assistant IA** (Claude Code ou Codex) et le **nom du projet**, crée le dossier `~/coding-projects/<nom>`, y récupère le squelette, installe l'**app Claude (desktop)** et guide l'ouverture en deux temps, via le presse-papier :
-
-1. le **chemin du dossier** est copié : dans l'app, onglet **Code** (pas Cowork) → **Select folder** → **Cmd+Shift+G** → **Cmd+V** → **Entrée** → valider ;
-2. l'utilisateur appuie sur Entrée dans le Terminal, la **phrase de démarrage** est copiée : il la colle dans Claude.
+Le script demande **quel assistant IA** (Claude Code ou Codex) et le **nom du projet**, crée le dossier `~/coding-projects/<nom>`, y récupère le squelette, installe l'**app Claude (desktop)** puis **l'ouvre directement sur le projet** (onglet Code), la phrase de démarrage déjà écrite. L'utilisateur n'a plus qu'à appuyer sur **Entrée** dans Claude :
 
 > « Lis AGENTS.md et aide-moi à démarrer mon application (projet : `<nom>`, dossier : `<chemin>`). Vérifie d'abord que tu travailles bien dans ce dossier. »
 
-La phrase porte le chemin attendu : si le mauvais dossier a été ouvert, l'IA le détecte et fait rouvrir le bon (`AGENTS.md`, étape 0).
+L'ouverture passe par le lien `claude://code/new?folder=…&q=…` de l'app Claude (celui de son action Finder « New Claude Code Session Here »). Ce lien n'est pas documenté publiquement : le script affiche un plan B manuel (onglet Code → Select folder, phrase dans le presse-papier). La phrase porte le chemin attendu : si le mauvais dossier a été ouvert, l'IA le détecte et rouvre le bon (`AGENTS.md`, étape 0).
 
 > **Revenir sur un projet** plus tard : ouvre l'app Claude → onglet **Code** → il est dans tes
 > **dossiers récents** (pas besoin du terminal).
