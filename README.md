@@ -21,7 +21,7 @@ L'ouverture passe par le lien `claude://code/new?folder=…&q=…` de l'app Clau
 
 > **Une seule règle** : pour **démarrer** (nouveau projet, ou projet existant pas encore sur ce Mac), la commande ci-dessus ; pour **continuer** un projet, l'app Claude → onglet **Code** → le projet est dans la liste (pas besoin du terminal).
 
-L'assistant suit **`AGENTS.md`** (chargé automatiquement, voir `CLAUDE.md`) et déroule tout : connexions, création du repo **dans l'org** (privé), les **deux environnements DEV et PROD** (deux projets Apps Script, deux Google Sheets, un déploiement chacun), puis itérations : on publie en DEV, on teste, et la PROD suit sur demande.
+L'assistant suit **`AGENTS.md`** (chargé automatiquement, voir `CLAUDE.md`) et déroule tout : connexions, création du repo **dans l'org** (privé), les **deux environnements DEV et PROD** (deux Google Sheets, chacun avec son projet Apps Script **rattaché** : le code vit dans le Sheet et le suit dans les dossiers Drive ; un déploiement chacun), puis itérations : on publie en DEV, on teste, et la PROD suit sur demande.
 
 > **Sans la commande** (terminal déjà équipé) : `gh repo create gongsup1/<projet> --template
 > gongsup1/appsscript-starter-kit --private --clone`, ouvrir le dossier avec l'IA, même phrase.

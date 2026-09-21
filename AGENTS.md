@@ -84,8 +84,8 @@ projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit fa
    **Dès qu'un secret ou une clé API entre en jeu** (trouvé dans le code, demandé pour une fonctionnalité, collé par l'utilisateur, sur le point d'être committé) : **arrête-toi et demande à l'utilisateur s'il est absolument certain qu'il n'y a aucun risque**. Seul un « oui » franc, avec une raison claire (ex. : c'est un identifiant public, pas un vrai secret), permet de continuer. **Au moindre doute**, le sien ou le tien : aucun commit, aucun push, et **fais envoyer un e-mail à `dev@gong-galaxy.com`** (procédure au §7).
 2. **Deux déploiements, DEV et PROD, JAMAIS un de plus.** Chaque app = **un seul code**
    (un dépôt Git) et **deux projets Apps Script jumeaux**, « `<Nom>` (DEV) » (`.clasp.json`, cible
-   par défaut) et « `<Nom>` (PROD) » (`.clasp.prod.json`), chacun avec son Google Sheet et **un
-   seul** déploiement, créé une fois à la mise en place (§3). Ensuite, **uniquement**
+   par défaut) et « `<Nom>` (PROD) » (`.clasp.prod.json`), chacun **rattaché à son Google Sheet**
+   et doté d'**un seul** déploiement, créé une fois à la mise en place (§3). Ensuite, **uniquement**
    `clasp redeploy` sur `DEPLOYMENT_ID_DEV` ou `DEPLOYMENT_ID_PROD` (notés dans `DEPLOY.md`).
    ❌ Jamais un nouveau déploiement, ❌ jamais supprimer un déploiement, ❌ jamais un troisième
    projet. **Ordre immuable** : DEV d'abord, PROD ensuite, avec le **même code** (même commit),
@@ -184,12 +184,12 @@ Il faut aussi un **dossier Drive** pour le projet (voir §3, étape 1).
 
 > But : arriver à un projet **versionné sur GitHub** avec ses **deux environnements en ligne, DEV et PROD** (règles n°2 et n°11) : un squelette « bonjour » tout neuf **ou** ton projet existant repris proprement, **avant** de travailler sur ce que l'app doit faire. Ne passe à la *Phase finale* qu'une fois la plomberie verte.
 
-**L'architecture, à expliquer simplement à l'utilisateur** : un seul code, deux projets Apps Script jumeaux, chacun avec son Google Sheet et **un seul** déploiement.
+**L'architecture, à expliquer simplement à l'utilisateur** : un seul code, deux projets Apps Script jumeaux, **chacun rattaché à son Google Sheet** (le code vit dans le Sheet : *Extensions → Apps Script*, et le suit quand on le range dans un dossier) et **un seul** déploiement chacun.
 
 | | DEV | PROD |
 |---|---|---|
 | Pour qui | le développeur (et ses testeurs) | les utilisateurs |
-| Projet Apps Script | « `<Nom>` (DEV) », fichier `.clasp.json` : cible **par défaut** de clasp | « `<Nom>` (PROD) », fichier `.clasp.prod.json` : toujours `clasp -P .clasp.prod.json …` |
+| Projet Apps Script | « `<Nom>` (DEV) », rattaché au Sheet DEV ; fichier `.clasp.json` : cible **par défaut** de clasp | « `<Nom>` (PROD) », rattaché au Sheet PROD ; fichier `.clasp.prod.json` : toujours `clasp -P .clasp.prod.json …` |
 | Google Sheet | « `<Nom>` (DEV) » : données de test | « `<Nom>` (PROD) » : vraies données |
 | Notifications | redirigées vers le développeur | vrais destinataires |
 | Tests, « voir en tant que », bandeau DEV | oui | non (refusés côté serveur) |
@@ -226,7 +226,7 @@ Dans tous les cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 > Le repo du projet est **privé** et **dans l'org** ; seul le template
 > `gongsup1/appsscript-starter-kit` est public.
 
-**A2. Dossier Drive + deux Sheets** (humain) : ouvre le **dossier qui t'a été attribué** pour tes projets (**FX t'en a partagé le lien** : c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un **sous-dossier** au nom du projet, puis **à l'intérieur deux Google Sheets vides** : « `<Nom>` (DEV) » et « `<Nom>` (PROD) ». **Copie l'URL entière de chacun** (barre d'adresse du navigateur) et donne-les à l'IA en précisant lequel est lequel : pas besoin d'y repérer l'ID. Donne aussi l'**ID (ou l'URL) du dossier**.
+**A2. Dossier Drive + deux Sheets** (humain) : ouvre le **dossier qui t'a été attribué** pour tes projets (**FX t'en a partagé le lien** : c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un **sous-dossier** au nom du projet, puis **à l'intérieur deux Google Sheets vides** : « `<Nom>` (DEV) » et « `<Nom>` (PROD) ». **Copie l'URL entière de chacun** (barre d'adresse du navigateur) et donne-les à l'IA en précisant lequel est lequel : pas besoin d'y repérer l'ID. Donne aussi l'**ID (ou l'URL) du dossier**. ⚠️ **N'ouvre pas encore *Extensions → Apps Script*** dans ces Sheets : c'est l'IA qui va y rattacher le code (sinon Google y crée un projet vide).
 
 > Les Sheets **doivent** vivre dans ton dossier attitré : c'est là que FX peut les retrouver et
 > les auditer. L'IA **ne peut pas** créer ce dossier ni ces Sheets à ta place : écrire dans Drive
@@ -235,11 +235,13 @@ Dans tous les cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 
 **A3. Créer les deux projets et leurs deux déploiements** (l'IA, à confirmer avec l'utilisateur) :
 ```bash
-# 1. Les deux projets Apps Script. PROD d'abord, puis DEV : à la fin, .clasp.json = DEV (défaut)
+# 1. Les deux projets Apps Script, RATTACHÉS chacun à son Sheet (--parentId = ID du Sheet, que tu
+#    extrais de son URL ; clasp confirme « Bound to document ») : le code vit dans le Sheet et le
+#    suit dans les dossiers Drive. PROD d'abord, puis DEV : à la fin, .clasp.json = DEV (défaut)
 #    et .clasp.prod.json = PROD. Un clasp push sans précision ne peut donc JAMAIS toucher la PROD.
-clasp create --type standalone --title "<Nom> (PROD)"
+clasp create --title "<Nom> (PROD)" --parentId <ID_SHEET_PROD>
 mv .clasp.json .clasp.prod.json
-clasp create --type standalone --title "<Nom> (DEV)"
+clasp create --title "<Nom> (DEV)" --parentId <ID_SHEET_DEV>
 git restore appsscript.json   # ⚠️ clasp create ÉCRASE le manifeste par sa version par défaut
                               #    (fuseau New York, sans web-app ni access DOMAIN). On remet
                               #    celui du squelette depuis Git AVANT de pousser.
@@ -256,11 +258,14 @@ clasp -P .clasp.prod.json deploy -V <num_prod> -d "<Nom> (PROD)"    # → DEPLOY
 ```
 Ces deux `clasp deploy` sont les **seuls** de toute la vie du projet (règle n°2). À la première ouverture de chaque adresse, Google demande d'autoriser l'app : c'est normal, l'utilisateur accepte.
 
+> **Un projet vide est déjà rattaché à un des Sheets** (l'utilisateur a ouvert *Extensions → Apps Script* trop tôt) ? **Réutilise-le** au lieu d'en rattacher un second : demande l'URL de l'éditeur ouvert depuis ce Sheet, puis écris son Script ID dans le bon fichier (`printf '{"scriptId":"<ID>","rootDir":""}\n' > .clasp.json`, ou `.clasp.prod.json` pour la PROD) ; le premier `clasp push` remplacera son contenu vide.
+
 **A4. Mémo + commit** : remplis `DEPLOY.md` (colonnes DEV et PROD) ; **remplace le README** par un court README du projet (titre = nom du projet, 1-2 lignes, pointe vers `DEPLOY.md` pour les adresses et IDs) ; **supprime `bootstrap.sh`** s'il est présent (c'est l'installeur du template, inutile dans un projet). Puis `git add -A && git commit -m "chore: bootstrap projet Apps Script (DEV + PROD)" && git push`.
 
 **A5. Vérifier les deux environnements** :
 - **DEV** : bandeau « Environnement DEV » ; le bouton « Ajouter une entrée de test » écrit une ligne dans le **Sheet DEV**, et seulement lui ; « Voir en tant que » change l'utilisateur affiché.
 - **PROD** : ni bandeau, ni bouton de test, ni « voir en tant que ».
+- Dans chaque Sheet, *Extensions → Apps Script* montre le code de son environnement. Rappelle à l'utilisateur qu'on le **consulte** là, mais qu'on ne le **modifie jamais** là (règle n°3).
 - Le code est sur GitHub. ✅ → passe à la **Phase finale**.
 
 ---
@@ -326,14 +331,15 @@ gh repo create gongsup1/<nom-du-projet> --private --source=. --push && git push 
 - **Copie de test existante** → c'est le DEV : `printf '{"scriptId":"<SCRIPT_ID_COPIE>","rootDir":""}\n' > .clasp.json` ; son Sheet est le Sheet DEV. Si l'un de ses déploiements est déjà utilisé par des testeurs (`clasp deployments <SCRIPT_ID_COPIE>`), garde-le comme `DEPLOYMENT_ID_DEV` ; sinon tu créeras le seul déploiement DEV en B6.
 - **Pas de copie** → on la crée (humain, guidé) : dans le dossier du projet, **Fichier → Créer une copie** du Sheet PROD, nommée « `<Nom>` (DEV) ». La copie contient les **vraies données** : demande à l'utilisateur s'il veut les garder pour tester ou vider les onglets de données de la **copie** (jamais ceux du Sheet PROD).
   - Script **lié** : la copie du Sheet emporte une copie du script, c'est le **projet DEV**. Son Script ID : dans la copie, *Extensions → Apps Script* → ⚙️. Puis `printf '{"scriptId":"<SCRIPT_ID_DEV>","rootDir":""}\n' > .clasp.json`.
-  - Script **autonome** : `clasp create --type standalone --title "<Nom> (DEV)"` puis `git restore appsscript.json`.
+  - Script **autonome** : la copie du Sheet n'emporte pas de script ; crée le projet DEV **rattaché** à la copie : `clasp create --title "<Nom> (DEV)" --parentId <ID_SHEET_DEV>` puis `git restore appsscript.json`. (La PROD, elle, reste autonome : la rattacher à un Sheet changerait son adresse. Son fichier sera rangé dans le dossier en B8.)
 - Les **déclencheurs** ne sont pas copiés : recrée dans le DEV seulement ceux qui sont utiles aux tests (leurs notifications iront au développeur). Les **Propriétés du script** du DEV (clés…) : règle n°1.
 
-**B5. Mettre en place la PROD** (quand le projet existant devient le DEV, simple prototype) :
-- Même type que le DEV. Script **lié** : l'utilisateur fait **Fichier → Créer une copie** du Sheet DEV, nommée « `<Nom>` (PROD) », dans le dossier du projet, et **vide les onglets de données de cette copie** (la PROD démarre propre) ; la copie emporte le script, c'est le projet PROD (Script ID via *Extensions → Apps Script* → ⚙️), à écrire dans `.clasp.prod.json`. Script **autonome** : l'utilisateur crée un Sheet vide « `<Nom>` (PROD) » (les onglets se créent seuls, règle n°5), puis :
+**B5. Mettre en place la PROD** (quand le projet existant devient le DEV, simple prototype) : la nouvelle PROD est toujours **rattachée à son Sheet**. L'utilisateur fait **Fichier → Créer une copie** du Sheet DEV, nommée « `<Nom>` (PROD) », dans le dossier du projet, et **vide les onglets de données de cette copie** (la PROD démarre propre, en gardant onglets et mise en forme).
+- Script **lié** : la copie emporte le script, c'est le projet PROD (Script ID via *Extensions → Apps Script* → ⚙️ dans la copie), à écrire dans `.clasp.prod.json`.
+- Script **autonome** : la copie n'a pas de script ; crée la PROD rattachée à la copie :
   ```bash
   mv .clasp.json .clasp.dev.json        # met le DEV de côté le temps de créer la PROD
-  clasp create --type standalone --title "<Nom> (PROD)"
+  clasp create --title "<Nom> (PROD)" --parentId <ID_SHEET_PROD>
   mv .clasp.json .clasp.prod.json && mv .clasp.dev.json .clasp.json
   git restore appsscript.json
   ```
@@ -387,7 +393,7 @@ gh repo create gongsup1/<nom-du-projet> --private --source=. --push && git push 
 **B8. Ranger dans le dossier Drive attitré** (humain, guidé) :
 1. Dans **Drive**, ouvre ton **dossier attitré** (`<ID_DOSSIER_PERSO_DRIVE>`, lien partagé par FX).
 2. Crée un **sous-dossier** au nom du projet (s'il n'existe pas déjà).
-3. **Glisse** dedans les **deux Google Sheets** (DEV et PROD) **et** les fichiers de script qui apparaissent dans Drive.
+3. **Glisse** dedans les **deux Google Sheets** (DEV et PROD) **et**, s'il y en a un, le fichier du script **autonome** d'origine (un projet autonome qui a déjà des utilisateurs le reste : on le range à côté des Sheets).
 
 > **Sans risque :** déplacer ces fichiers dans un dossier **ne change ni les IDs, ni les adresses,
 > ni le fonctionnement du code** (la position dans Drive est indépendante des IDs). Un script
@@ -396,6 +402,7 @@ gh repo create gongsup1/<nom-du-projet> --private --source=. --push && git push 
 
 **B9. Vérifier et passer le relais** :
 - Adresse PROD **inchangée** et fonctionnelle ; adresse DEV fonctionnelle ; code et étiquettes `origine-*` sur GitHub ; `DEPLOY.md` rempli (DEV et PROD, version N de retour arrière, déclencheurs, noms des propriétés) ; tout est dans le dossier attitré.
+- Montre à l'utilisateur **où vit le code** : *Extensions → Apps Script* depuis chaque Sheet (ou, pour une PROD d'origine autonome, son fichier dans le dossier du projet).
 - **Dis clairement à l'utilisateur** : « À partir de maintenant, ne modifie plus le code dans l'éditeur Apps Script, ni en DEV ni en PROD : demande-moi. Une modification faite dans l'éditeur serait écrasée à la prochaine publication. » ✅ → passe à la **Phase finale**.
 
 ---
@@ -682,6 +689,7 @@ function testNotify() {
 | `node`, `clasp`, `brew` ou `gh` : « command not found » | Homebrew (Mac Apple Silicon) absent du PATH | Ligne `brew shellenv` dans `~/.zprofile`, puis quitter (Cmd+Q) et rouvrir l'app Claude (§2) |
 | Premier `git commit` refusé : « Please tell me who you are » | Identité Git jamais configurée sur ce poste | `git config --global user.name` / `user.email` (§2) |
 | Toute l'app en erreur « Environnement inconnu (projet …) » | `ENVIRONMENTS` (`Env.js`) pas renseigné, ou projet copié (nouvel ID) | Renseigner les deux Script IDs dans `Env.js`, puis republier. Un projet copié n'est **ni** DEV **ni** PROD tant qu'on ne l'a pas déclaré |
+| *Extensions → Apps Script* depuis le Sheet montre un projet vide | Google a créé ce projet vide quand quelqu'un a ouvert le menu avant que le script soit rattaché ; ou projet d'origine autonome (Parcours B) | Le vrai code s'ouvre avec `clasp open-script` (DEV) ou `clasp -P .clasp.prod.json open-script` (PROD). N'écris rien dans le projet vide ; à la mise en place, réutilise-le (A3) |
 | « Fonction réservée à l'environnement DEV » | Fonction de test appelée en PROD | Normal : `requireDev_()` fait son travail (règle n°11) |
 | Une modif faite dans l'éditeur Apps Script a disparu | La publication suivante a écrasé le code en ligne par celui de Git | Ne jamais modifier dans l'éditeur (règle n°3) ; retrouver la modif dans l'historique des versions de l'éditeur si besoin |
 | Un test a envoyé un e-mail à une vraie personne | Envoi direct par `MailApp`/`GmailApp`, hors `notify_()` | Tout envoi passe par `notify_()` (§8.a) ; chercher `MailApp\|GmailApp` dans le code |
