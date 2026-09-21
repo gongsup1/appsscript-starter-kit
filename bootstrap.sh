@@ -233,7 +233,12 @@ esac
 # --- 4. Nom du projet + dossier de travail (~/coding-projects/<nom>) ---
 progress "Nom du projet et dossier de travail"
 read -rp "$(printf '\033[1;36m> Nom court du projet (ex. suivi-livraisons) : \033[0m')" NAME
-NAME="$(printf '%s' "$NAME" | tr ' ' '-' | tr -cd '[:alnum:]-')"
+# Nom normalise en minuscules ASCII ("Équipe Livraisons" -> "equipe-livraisons") : il sert de
+# nom de dossier, de repo GitHub, et son chemin sera colle dans la fenetre de choix de dossier.
+NAME="$(printf '%s' "$NAME" \
+  | LC_ALL=en_US.UTF-8 sed 'y/àâäéèêëîïôöùûüÿçÀÂÄÉÈÊËÎÏÔÖÙÛÜŸÇ/aaaeeeeiioouuuycAAAEEEEIIOOUUUYC/' \
+  | tr ' _' '--' | LC_ALL=C tr -cd 'A-Za-z0-9-' | tr 'A-Z' 'a-z' \
+  | sed 's/--*/-/g; s/^-//; s/-$//')"
 [ -n "$NAME" ] || { echo "Nom vide : on arrete." >&2; exit 1; }
 DIR="$HOME/coding-projects/$NAME"
 [ -e "$DIR" ] && { echo "$DIR existe deja : choisis un autre nom, ou ouvre-le directement." >&2; exit 1; }
@@ -254,16 +259,18 @@ rm -f bootstrap.sh   # l'installeur du template n'a rien a faire dans le repo du
 
 # --- 6. Lancer l'assistant ---
 progress "Lancement de l'assistant"
-PROMPT="Lis AGENTS.md et aide-moi a demarrer mon application (nom du projet : $NAME)."
+# La phrase porte le chemin attendu : si le mauvais dossier a ete ouvert (parent, sous-dossier
+# design-system/...), l'IA s'en apercoit et fait rouvrir le bon au lieu de travailler au mauvais
+# endroit. Sans accents : pbcopy peut abimer les caracteres accentues selon la langue du Mac.
+PROMPT="Lis AGENTS.md et aide-moi a demarrer mon application (projet : $NAME, dossier : $DIR). Verifie d'abord que tu travailles bien dans ce dossier."
 case "$AI" in
   "Claude Code")
-    # L'app desktop ne s'ouvre pas sur un dossier par script : on la lance, l'utilisateur
-    # fait Code -> Select folder (quelques clics, zero terminal). Elle garde le dossier
-    # en "recents" pour y revenir facilement ensuite.
-    say "Ouverture de l'app Claude (desktop)..."
-    open -a "Claude" 2>/dev/null || true
-    # Copie la phrase dans le presse-papier : l'utilisateur n'a plus qu'a coller (Cmd+V).
-    printf '%s' "$PROMPT" | pbcopy 2>/dev/null || true
+    # Le point fragile pour un non-developpeur : ouvrir LE BON dossier dans l'app. Elle ne
+    # s'ouvre pas sur un dossier par script, donc on guide en deux temps via le presse-papier :
+    #   1) il contient le CHEMIN du dossier, a coller dans la fenetre de choix (Cmd+Shift+G) ;
+    #   2) puis la PHRASE de demarrage, a coller dans Claude.
+    # L'app garde ensuite le dossier dans ses "recents" : pas besoin de refaire ce parcours.
+    printf '%s' "$DIR" | pbcopy 2>/dev/null || true
     printf '\033[1;36m'
     cat <<EOF
 
@@ -271,23 +278,37 @@ case "$AI" in
    Ton projet est pret dans :
      $DIR
 
-   >>> IMPORTANT : Claude NE demarre PAS tout seul. <<<
-   Ouvrir le dossier ne lance rien : c'est la PHRASE ci-dessous,
-   envoyee avec Entree, qui met l'assistant au travail.
+   ETAPE 1/2 : ouvrir CE dossier dans l'app Claude
+   (son chemin est deja copie : tu n'as rien a taper)
 
-   Dans l'app Claude qui vient de s'ouvrir :
      1. Clique l'onglet   Code   (en haut). Pas Chat, pas Cowork :
         seul l'onglet Code peut installer et publier ton app.
-     2. Clique   Select folder   et choisis le dossier ci-dessus.
-     3. Clique dans la zone de saisie, COLLE la phrase avec Cmd+V
-        (elle est deja copiee), puis appuie sur Entree :
+     2. Clique   Select folder   : une fenetre de choix s'ouvre.
+     3. Appuie sur   Cmd + Shift + G   puis   Cmd + V   puis   Entree.
+     4. Tu es dans le dossier "$NAME". Ne clique sur RIEN d'autre :
+        clique directement le bouton de validation (Ouvrir / Select).
+  ============================================================
+EOF
+    printf '\033[0m'
+    read -rp $'\n\033[1;36m> Lis les 4 points ci-dessus, puis appuie sur Entree pour ouvrir l\'app Claude. \033[0m' _
+    open -a "Claude" 2>/dev/null || true
+    read -rp $'\n\033[1;36m> Quand ton dossier est ouvert dans Claude, reviens ici et appuie sur Entree. \033[0m' _
+    printf '%s' "$PROMPT" | pbcopy 2>/dev/null || true
+    printf '\033[1;36m'
+    cat <<EOF
 
-        "$PROMPT"
+  ============================================================
+   ETAPE 2/2 : lancer l'assistant
+   La phrase de demarrage est maintenant copiee. Dans Claude :
+   clique dans la zone de saisie, Cmd + V, puis Entree.
 
-   -> Tant que tu n'as pas envoye cette phrase, il ne se passe rien : c'est normal.
+     "$PROMPT"
+
+   >>> Claude NE demarre PAS tout seul : c'est cette phrase,
+       envoyee avec Entree, qui le met au travail.
 
    Pour REVENIR sur ce projet plus tard : ouvre l'app Claude,
-   onglet Code -> il est dans tes dossiers recents.
+   onglet Code, il est dans tes dossiers recents.
   ============================================================
 EOF
     printf '\033[0m\n' ;;

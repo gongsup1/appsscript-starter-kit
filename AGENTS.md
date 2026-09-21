@@ -43,6 +43,7 @@ En permanence :
 À la **première** conversation, procède dans cet ordre - **ne te lance pas dans les
 fonctionnalités de l'app avant que la plomberie soit en place** :
 
+0. **Vérifie ton dossier de travail avant toute commande.** Il doit contenir `AGENTS.md` **à sa racine** (pas un sous-dossier comme `design-system/`, pas le dossier parent `coding-projects/`) et, si la phrase de démarrage indique un dossier, être **celui-là**. Sinon, ne lance **rien** (surtout pas `git init`) : copie le bon chemin dans le presse-papier (`printf '%s' "<chemin>" | pbcopy`) et fais rouvrir le bon dossier : nouvelle session dans l'onglet **Code** → **Select folder** → **Cmd+Shift+G** → **Cmd+V** → **Entrée** → valider sans rien cliquer d'autre.
 1. **Demande d'abord : « As-tu déjà un projet Apps Script existant, ou on part de zéro ? »**
    - **De zéro** → **Parcours A** (§3).
    - **Projet existant** (déjà en ligne, peut-être avec une URL imprimée) → **Parcours B**
