@@ -622,7 +622,6 @@ NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) 
     - créer l'org GitHub (owner dev@), publier gongsup1/appsscript-starter-kit en PUBLIC,
       le marquer "Template repository", autoriser les membres à créer des repos privés,
       inviter les collaborateurs comme membres ;
-    - Brevo : SMS uniquement pour l'instant (les e-mails partent par MailApp, depuis
-      l'adresse du collaborateur). Si un jour on repasse les e-mails sur Brevo : vérifier
-      l'expéditeur noreply@ + SPF/DKIM du domaine (Google ET Brevo).
+    - Brevo : SMS uniquement (les e-mails partent par MailApp, depuis l'adresse du
+      collaborateur).
 -->
