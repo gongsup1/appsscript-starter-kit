@@ -1,0 +1,8 @@
+# Fichiers que `clasp push` N'ENVOIE PAS à Apps Script.
+#
+# design-system/ contient les SOURCES de la charte (brand.css, header.js, showcase.html).
+# Elles sont déjà recopiées dans Styles.html et Header.html, les seuls fichiers de charte
+# à envoyer. Sans cette ligne, header.js partirait comme code SERVEUR et ferait planter
+# toute l'app au chargement (« ReferenceError: HTMLElement is not defined »).
+design-system/**
+node_modules/**

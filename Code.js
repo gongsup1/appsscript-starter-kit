@@ -64,7 +64,7 @@ function displayName_(email) {
 
 /* ============ READ / WRITE (called from the front-end via google.script.run) ============ */
 // IMPORTANT: google.script.run serialises arrays/objects poorly (they can arrive as null in
-// the browser). Always return a JSON STRING here and JSON.parse() it client-side (AGENTS.md §7).
+// the browser). Always return a JSON STRING here and JSON.parse() it client-side (AGENTS.md, rule 7).
 function getState() {
   const rows = readRows_('ENTRIES');
   const last = rows.length ? rows[rows.length - 1] : null;

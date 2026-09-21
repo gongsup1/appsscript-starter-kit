@@ -109,12 +109,22 @@ git --version                    # Git installé ?
 brew install gh                  # GitHub CLI (macOS). Sinon : https://cli.github.com
 ```
 
+> **`node`, `clasp` ou `brew` « introuvables » (command not found) alors que la commande
+> d'install est passée ?** Sur Mac Apple Silicon, Homebrew vit dans `/opt/homebrew`, hors du PATH par défaut. Vérifie que `~/.zprofile` contient `eval "$(/opt/homebrew/bin/brew shellenv)"` (le bootstrap l'ajoute ; sinon ajoute-la), puis demande à l'utilisateur de **quitter complètement l'app Claude (Cmd+Q) et de la rouvrir** : elle ne relit son environnement qu'au démarrage.
+
 Puis les deux connexions (l'IA lance les commandes, l'humain fait le clic navigateur) :
 
 ```bash
 clasp login        # se connecter avec le compte @gong-galaxy.com
 gh auth login      # GitHub.com → HTTPS → "Login with a web browser" (aucune clé SSH à créer)
 gh auth setup-git  # branche gh comme gestionnaire d'identifiants Git → `git push` marche sans mot de passe
+```
+
+Enfin, l'**identité Git** (qui signe les commits). Sur un poste neuf elle est vide et le premier `git commit` échoue (« Please tell me who you are »). Vérifie, et si c'est vide, demande prénom + nom à l'utilisateur et utilise **son e-mail @gong-galaxy.com** (le même que son compte GitHub) :
+
+```bash
+git config --global user.name  || git config --global user.name  "Prénom Nom"
+git config --global user.email || git config --global user.email "prenom.nom@gong-galaxy.com"
 ```
 
 > **Compte GitHub.** Si l'humain n'en a pas : le créer sur https://github.com avec son
@@ -210,7 +220,9 @@ le code est sur GitHub. ✅ → passe à la **Phase finale**.
 
 **B2. Rapatrier le code** (l'IA) : si tu es parti du template, **supprime d'abord** les fichiers
 squelette (`Code.js`, `Index.html`, `appsscript.json`) - on va récupérer les vrais. Garde les
-fichiers-guides (`AGENTS.md`, `CLAUDE.md`, `README.md`, `DEPLOY.md`, `.gitignore`). Puis :
+fichiers-guides et la charte (`AGENTS.md`, `CLAUDE.md`, `README.md`, `DEPLOY.md`, `.gitignore`,
+`.claspignore`, `design-system/`, `Styles.html`, `Header.html`). **Garde surtout `.claspignore`** :
+sans lui, le prochain `clasp push` enverrait `design-system/` et casserait l'app (§9). Puis :
 ```bash
 clasp clone <SCRIPT_ID>        # rapatrie le code existant + écrit .clasp.json
 ```
@@ -311,9 +323,11 @@ Le squelette est déjà en place - adapte-le, ne repars pas de zéro :
 | `Code.js` | Backend : `doGet` sert l'app, lecture/écriture du Sheet **par lots + cache + verrou**, onglets auto-créés. À adapter (`TABS`, `getData`, `saveEntry`). |
 | `Index.html` | Front mono-page : appelle le backend via `google.script.run`, `JSON.parse` des réponses. |
 | `DEPLOY.md` | Mémo de déploiement du projet (IDs + commande de publication pré-remplie). |
+| `Styles.html`, `Header.html` | Copies de `design-system/brand.css` et `design-system/header.js` emballées en `.html`, seule forme qu'Apps Script sait servir. Incluses par `Index.html`. |
 | `.gitignore` | Exclut jetons clasp, `node_modules`, sauvegardes, tout fichier de secret. |
+| `.claspignore` | Ce que `clasp push` **n'envoie pas** : `design-system/` (ses sources casseraient l'app côté serveur). Ne pas supprimer. |
 | `.clasp.json` | Créé par `clasp create` ; associe le dossier au projet Apps Script. |
-| `design-system/` | **Charte graphique** partagée : `brand.css` (tokens + composants), `header.js` (`<app-header>`), `GUIDELINES.md` (règles d'usage), `showcase.html` (aperçu). Voir la section suivante. |
+| `design-system/` | **Charte graphique** partagée : `brand.css` (tokens + composants), `header.js` (`<app-header>`), `GUIDELINES.md` (règles d'usage), `showcase.html` (aperçu). Voir la section suivante. Reste en local, jamais poussé (`.claspignore`). |
 
 ---
 
@@ -388,7 +402,9 @@ le reste ; **coller la valeur est le SEUL geste humain** - et tu le **guides pas
 
 | Clé (= nom de la Propriété) | Sert à | Valeur | Requis ? |
 |---|---|---|---|
-| `BREVO_API_KEY` | Envoi e-mails (§8a) et SMS (§8b) via Brevo | 1Password, coffre `Vibe-coding` → la clé Brevo **attribuée à l'utilisateur** (créée par le service informatique) | Oui si e-mail/SMS |
+| `BREVO_API_KEY` | Envoi de SMS via Brevo (§8.b) | 1Password, coffre `Vibe-coding` → la clé Brevo **attribuée à l'utilisateur** (créée par le service informatique) | Oui si SMS |
+
+L'**e-mail** (§8.a) n'a besoin d'**aucun** secret : il passe par Google directement.
 
 **Poser une clé - déroule ces étapes AVEC l'utilisateur**, à voix haute, une par une :
 
@@ -416,51 +432,39 @@ committée reste dans l'historique **et se fait révoquer** → panne silencieus
 > N'ajoute que ce dont tu as besoin. Chaque recette introduit un **nouveau scope OAuth** →
 > applique la **règle n°9** (tester dans l'éditeur + accepter l'autorisation) **avant** de redéployer.
 
-### 8.a - Envoyer un e-mail (Brevo, expéditeur `noreply@gong-galaxy.com`)
+### 8.a - Envoyer un e-mail (Google `MailApp`, depuis l'adresse de l'utilisateur)
+
+Les e-mails partent **de l'adresse @gong-galaxy.com de la personne qui a déployé l'app** (l'app tourne en `executeAs: USER_DEPLOYING`) et apparaissent dans ses « Envoyés » Gmail. Aucune clé, aucun secret, aucun réglage chez un prestataire. Préviens l'utilisateur de ce point avant d'activer l'envoi : les destinataires verront **son nom** comme expéditeur, et leurs réponses arriveront **dans sa boîte**.
 
 ```js
-/* ============ RECIPE: EMAIL (Brevo transactional) ============ */
-// Same provider and key as the SMS recipe (§8.b): the Brevo API key lives in Script
-// Properties (BREVO_API_KEY), value copied ONCE from 1Password (see §7). Brevo
-// sends the mail AS noreply@gong-galaxy.com - a verified sender in Brevo, with the
-// gong-galaxy.com domain authenticated (SPF/DKIM). No Google "Send as" alias is involved,
-// and no SMTP password ever lives in an app.
-// NEVER hard-code the key: a committed key gets auto-revoked → silent mail outage.
-const BREVO_API_KEY  = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || '';
-const BREVO_MAIL_URL = 'https://api.brevo.com/v3/smtp/email';
-const MAIL_FROM      = { email: 'noreply@gong-galaxy.com', name: 'GONG' };
+/* ============ RECIPE: EMAIL (Google MailApp, sent from the deploying user's address) ============ */
+// No API key, no secret: Apps Script sends through Google directly. The web app runs as the
+// person who deployed it (executeAs USER_DEPLOYING), so every e-mail leaves FROM THAT PERSON'S
+// ADDRESS and lands in their Gmail "Sent" folder.
+// Use MailApp, NOT GmailApp: MailApp only asks for "send e-mail as you", while GmailApp asks
+// for full read/delete access to the mailbox, far more than sending needs.
+// Quota: about 1,500 recipients per day per Workspace account (MailApp.getRemainingDailyQuota()).
 
-// Send one e-mail. Returns true on success. Pass htmlContent, OR switch to a Brevo template
-// (templateId + params) so a non-dev can edit the wording/design in Brevo WITHOUT a redeploy.
-function sendEmail_(to, subject, htmlContent) {
-  if (!BREVO_API_KEY) return false;
-  var res = UrlFetchApp.fetch(BREVO_MAIL_URL, {
-    method: 'post',
-    contentType: 'application/json',
-    headers: { 'api-key': BREVO_API_KEY },
-    muteHttpExceptions: true,
-    payload: JSON.stringify({
-      sender: MAIL_FROM,
-      to: [{ email: to }],
-      subject: subject,
-      htmlContent: htmlContent
-      // Template instead of htmlContent (edited in Brevo, no redeploy):
-      // templateId: 3, params: { name: 'X' }
-    })
+// Send one e-mail. Returns true on success, false if today's quota is used up.
+function sendEmail_(to, subject, htmlBody) {
+  if (MailApp.getRemainingDailyQuota() < 1) return false;
+  MailApp.sendEmail({
+    to: to,
+    subject: subject,
+    htmlBody: htmlBody
+    // name: APP_NAME,                  // optional: sender display name instead of the user's name
+    // replyTo: 'x@gong-galaxy.com',    // optional: where replies should go
   });
-  return res.getResponseCode() < 300;
+  return true;
 }
 
-// Run once from the editor to grant the network permission (UrlFetch), then check the inbox.
+// Run once from the editor to grant the "send e-mail" permission (rule 9). The test goes to
+// YOU (the account running it), never to real recipients: check your own inbox.
 function testEmail() {
-  sendEmail_('fxd@gong-galaxy.com', 'Test GONG', '<p>Ceci est un test.</p>');
+  const me = Session.getEffectiveUser().getEmail();
+  Logger.log(sendEmail_(me, 'Test ' + APP_NAME, '<p>Ceci est un test.</p>') ? 'Envoyé à ' + me : 'Quota du jour atteint');
 }
 ```
-
-> **Réglage unique (admin, voir §11) :** dans Brevo, vérifier `noreply@gong-galaxy.com`
-> comme **expéditeur** et **authentifier le domaine** `gong-galaxy.com` (SPF/DKIM). Le domaine
-> envoie par **deux canaux** (Google pour les humains, Brevo pour les apps) → laisser **Google
-> _et_ Brevo** dans le SPF du domaine. Tant que ce réglage n'est pas fait, les mails risquent le spam.
 
 ### 8.b - Alerte SMS (Brevo) - pack complet (envoi + contrôle quotidien + repli e-mail)
 
@@ -531,6 +535,9 @@ function setupDailyTrigger() {
 | Fonction qui pollue le menu *Exécuter* | Fonction « publique » | Suffixer son nom par `_` → privée |
 | `git push` refusé (identifiants) | git ne connaît pas tes identifiants GitHub | `gh auth login` **puis** `gh auth setup-git` (§2) |
 | Fuseau « New York » / `access DOMAIN` disparu après `clasp create` | `clasp create` écrase `appsscript.json` par sa version par défaut | `git restore appsscript.json` juste après `clasp create`, avant `clasp push` (§3, A3) |
+| Toute l'app en erreur `ReferenceError: HTMLElement is not defined` | `design-system/header.js` a été poussé comme code **serveur** (`.claspignore` absent ou modifié) | Remettre `.claspignore` (ligne `design-system/**`), vérifier avec `clasp status` que `design-system/` n'est plus listé, puis `clasp push` (le push remplace tout le contenu côté Google : le fichier fautif disparaît) |
+| `node`, `clasp`, `brew` ou `gh` : « command not found » | Homebrew (Mac Apple Silicon) absent du PATH | Ligne `brew shellenv` dans `~/.zprofile`, puis quitter (Cmd+Q) et rouvrir l'app Claude (§2) |
+| Premier `git commit` refusé : « Please tell me who you are » | Identité Git jamais configurée sur ce poste | `git config --global user.name` / `user.email` (§2) |
 
 ---
 
@@ -556,8 +563,7 @@ Arrête-toi et renvoie vers FX (`fxd@gong-galaxy.com`) avant / en cas de :
 
 - **créer ou supprimer un déploiement** (au-delà du tout premier), ou tout changement
   susceptible de **modifier l'URL publique** ;
-- **e-mail Brevo** : `noreply@gong-galaxy.com` à vérifier comme **expéditeur**, ou
-  domaine `gong-galaxy.com` à authentifier (SPF/DKIM) dans Brevo - accès admin/DNS ;
+- **e-mail** : besoin d'envoyer depuis une **adresse générique** (`noreply@`, adresse de service) plutôt que celle de l'utilisateur, ou volumes proches du quota Google (~1 500 destinataires par jour) ;
 - **valeur de secret** à obtenir/renouveler (1Password), ou **secret potentiellement fuité** ;
 - passage envisagé en `access: ANYONE` (app ouverte hors domaine) ;
 - doute sur quoi que ce soit d'**irréversible** côté Google ou GitHub.
@@ -577,5 +583,7 @@ NOTES POUR FX (à garder comme aide-mémoire, ou retirer avant diffusion large) 
     - créer l'org GitHub (owner dev@), publier gongsup1/appsscript-starter-kit en PUBLIC,
       le marquer "Template repository", autoriser les membres à créer des repos privés,
       inviter les collaborateurs comme membres ;
-    - Brevo : vérifier l'expéditeur noreply@ + SPF/DKIM du domaine (Google ET Brevo).
+    - Brevo : SMS uniquement pour l'instant (les e-mails partent par MailApp, depuis
+      l'adresse du collaborateur). Si un jour on repasse les e-mails sur Brevo : vérifier
+      l'expéditeur noreply@ + SPF/DKIM du domaine (Google ET Brevo).
 -->

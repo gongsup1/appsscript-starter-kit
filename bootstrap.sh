@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# GONG — démarrage d'une app Google Apps Script depuis le template.
+# GONG : démarrage d'une app Google Apps Script depuis le template.
 #
 # À lancer en UNE commande (copier-coller dans le Terminal), forme « à la Homebrew » :
 #
@@ -73,13 +73,55 @@ run_quiet() {
   fi
 }
 
+# Rend un Homebrew deja present utilisable : dans CE script, ET durablement pour les nouveaux
+# terminaux et l'app Claude. Sur Mac Apple Silicon, Homebrew vit dans /opt/homebrew, hors du
+# PATH par defaut ; son installeur AFFICHE la ligne a ajouter au profil mais ne l'ajoute pas.
+# Sans elle, node / npm / clasp / gh sont "introuvables" des qu'on sort de ce script.
+# Retourne 1 si Homebrew n'est pas installe.
+load_brew() {
+  local b profile line
+  for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -x "$b" ] || continue
+    eval "$("$b" shellenv)"
+    case "$(basename "${SHELL:-zsh}")" in
+      bash) profile="$HOME/.bash_profile" ;;
+      *)    profile="$HOME/.zprofile" ;;
+    esac
+    line="eval \"\$($b shellenv)\""
+    grep -qsF "$line" "$profile" ||
+      printf '\n# Homebrew (ajoute par le bootstrap GONG)\n%s\n' "$line" >>"$profile"
+    return 0
+  done
+  return 1
+}
+
+# Vrai si "npm install -g" peut ecrire SANS sudo. C'est le cas avec le Node de Homebrew ou de
+# nvm ; pas avec celui de l'installeur officiel (.pkg), qui renvoie EACCES. Or l'IA installe
+# clasp avec "npm install -g" et ne peut pas taper de mot de passe admin.
+npm_global_ok() {
+  local p
+  p="$(npm prefix -g 2>/dev/null)" || return 1
+  [ -w "$p/bin" ] && [ -w "$p/lib/node_modules" ]
+}
+
 # Installe Homebrew si absent (base pour Node, l'app Claude, gh).
 # Le tout premier install de Homebrew a besoin des droits admin (mot de passe Mac).
 # On pre-autorise sudo AVANT de lancer l'installeur : sinon, en mode non-interactif,
 # Homebrew teste "sudo -n" (sans jamais demander le mot de passe), le test echoue et
-# l'installeur s'arrete sur "Need sudo access on macOS" -- meme pour un vrai admin.
+# l'installeur s'arrete sur "Need sudo access on macOS" (meme pour un vrai admin).
+KEEPALIVE_PID=""
 ensure_brew() {
-  command -v brew >/dev/null 2>&1 && return 0
+  if command -v brew >/dev/null 2>&1; then
+    # Homebrew installe par un AUTRE compte du Mac : visible, mais pas modifiable par celui-ci.
+    if [ ! -w "$(brew --prefix)/Cellar" ]; then
+      echo "" >&2
+      echo "Homebrew est installe sur ce Mac par un autre compte utilisateur :" >&2
+      echo "ce compte-ci ne peut pas s'en servir pour installer des outils." >&2
+      echo "-> Lance ce bootstrap depuis le compte qui a installe Homebrew, ou demande a FX." >&2
+      exit 1
+    fi
+    return 0
+  fi
 
   say "Installation de Homebrew (l'outil qui pose Node et l'app)."
   cat <<'EOF'
@@ -87,7 +129,7 @@ ensure_brew() {
   C'est normal et attendu : c'est pour installer Homebrew.
 
   IMPORTANT : le mot de passe se tape A L'AVEUGLE dans le Terminal.
-  Rien ne s'affiche pendant la frappe -- ni points, ni etoiles, et le curseur ne bouge pas.
+  Rien ne s'affiche pendant la frappe (ni points, ni etoiles, et le curseur ne bouge pas).
   C'est voulu (securite). Tape ton mot de passe normalement, puis Entree.
   (Sur certains Mac, c'est Touch ID a la place du mot de passe.)
 
@@ -102,14 +144,24 @@ EOF
     exit 1
   fi
 
-  run_quiet "Installation de Homebrew (2 a 5 min)" \
+  # Le ticket sudo expire au bout de 5 min, et le telechargement des outils Xcode par Homebrew
+  # peut durer plus longtemps : on le renouvelle en tache de fond pendant l'installation.
+  # En cas d'arret du script, le trap coupe cette boucle et referme les droits admin.
+  ( while kill -0 "$$" 2>/dev/null; do sudo -n -v 2>/dev/null; sleep 30; done ) \
+    </dev/null >/dev/null 2>&1 &
+  KEEPALIVE_PID=$!
+  trap 'kill "$KEEPALIVE_PID" 2>/dev/null; sudo -k' EXIT
+
+  run_quiet "Installation de Homebrew (2 a 5 min, jusqu'a 15 min sur un Mac neuf)" \
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-  for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
-    [ -x "$b" ] && { eval "$("$b" shellenv)"; break; }
-  done
+  # Installation finie : on referme les droits admin. Rien de ce qui suit (ni l'assistant IA
+  # lance a la fin) n'en a besoin.
+  kill "$KEEPALIVE_PID" 2>/dev/null || true
+  sudo -k
+  trap - EXIT
 
-  command -v brew >/dev/null 2>&1 || {
+  load_brew || {
     echo "" >&2
     echo "Homebrew n'a pas pu s'installer (reseau ou droits ?)." >&2
     echo "-> Ferme puis rouvre le Terminal et relance la meme commande." >&2
@@ -119,22 +171,37 @@ EOF
 
 # --- Garde-fou : il faut un vrai terminal pour les questions ---
 if [ ! -t 0 ]; then
-  echo 'Lance : /bin/bash -c "$(curl -fsSL <URL>)"   — et non "curl ... | bash".' >&2
+  echo 'Lance : /bin/bash -c "$(curl -fsSL <URL>)" (et non "curl ... | bash").' >&2
   exit 1
 fi
+
+# Homebrew deja installe mais absent du PATH (profil jamais configure) : on le rebranche, pour
+# que les tests ci-dessous voient le Node qu'il a pu installer.
+command -v brew >/dev/null 2>&1 || load_brew || true
 
 # --- 1. Quel assistant IA ? ---
 progress "Choix de l'assistant IA"
 say "Quel assistant IA veux-tu utiliser ?"
 select AI in "Claude Code" "Codex"; do [ -n "${AI:-}" ] && break; done
+# Ctrl+D au menu : select sort de la boucle sans choix.
+[ -n "${AI:-}" ] || { echo "Aucun assistant choisi : on arrete." >&2; exit 1; }
 
 # --- 2. Node (requis pour clasp, quel que soit l'assistant) ---
 progress "Verification de Node"
-if ! command -v node >/dev/null 2>&1; then
+if command -v node >/dev/null 2>&1 && npm_global_ok; then
+  say "Node est deja installe."
+else
+  # Node absent, ou installe d'une facon qui empeche "npm install -g" sans mot de passe :
+  # on pose celui de Homebrew, qui passe devant dans le PATH.
   ensure_brew
   run_quiet "Installation de Node (~1 a 2 min)" brew install node
-else
-  say "Node est deja installe."
+  hash -r
+  npm_global_ok || {
+    echo "" >&2
+    echo "Node est installe, mais 'npm install -g' demande encore des droits admin." >&2
+    echo "-> Demande a FX (un Node installe a la main entre sans doute en conflit)." >&2
+    exit 1
+  }
 fi
 
 # --- 3. L'assistant IA choisi ---
@@ -143,11 +210,13 @@ case "$AI" in
   "Claude Code")
     # App desktop GUI (onglet Code) = cask 'claude' -> Claude.app.
     # PAS 'claude-code', qui est le CLI terminal.
-    if ! brew list --cask claude >/dev/null 2>&1; then
+    # On teste la presence de l'app elle-meme, pas "brew list" : si elle a ete telechargee
+    # depuis claude.ai, brew ne la connait pas et refuserait de l'installer par-dessus.
+    if [ -d "/Applications/Claude.app" ] || [ -d "$HOME/Applications/Claude.app" ]; then
+      say "L'app Claude est deja installee."
+    else
       ensure_brew
       run_quiet "Installation de l'app Claude (~quelques min)" brew install --cask claude
-    else
-      say "L'app Claude est deja installee."
     fi ;;
   "Codex")
     if command -v codex >/dev/null 2>&1; then
@@ -161,14 +230,21 @@ esac
 progress "Nom du projet et dossier de travail"
 read -rp "$(printf '\033[1;36m> Nom court du projet (ex. suivi-livraisons) : \033[0m')" NAME
 NAME="$(printf '%s' "$NAME" | tr ' ' '-' | tr -cd '[:alnum:]-')"
-[ -n "$NAME" ] || { echo "Nom vide — on arrete." >&2; exit 1; }
+[ -n "$NAME" ] || { echo "Nom vide : on arrete." >&2; exit 1; }
 DIR="$HOME/coding-projects/$NAME"
-[ -e "$DIR" ] && { echo "$DIR existe deja — choisis un autre nom, ou ouvre-le directement." >&2; exit 1; }
+[ -e "$DIR" ] && { echo "$DIR existe deja : choisis un autre nom, ou ouvre-le directement." >&2; exit 1; }
 mkdir -p "$DIR"
 
 # --- 5. Recuperer le squelette (repo public, sans historique Git) ---
 progress "Telechargement du squelette"
-curl -fsSL "https://github.com/$ORG/$REPO/archive/$REF.tar.gz" | tar -xz -C "$DIR" --strip-components=1
+# En cas d'echec, on supprime le dossier a moitie cree : sinon la relance bute sur "existe deja".
+if ! curl -fsSL "https://github.com/$ORG/$REPO/archive/$REF.tar.gz" | tar -xz -C "$DIR" --strip-components=1; then
+  rm -rf "$DIR"
+  echo "" >&2
+  echo "Telechargement du squelette impossible (reseau ?)." >&2
+  echo "-> Verifie la connexion, puis relance la meme commande." >&2
+  exit 1
+fi
 cd "$DIR"
 rm -f bootstrap.sh   # l'installeur du template n'a rien a faire dans le repo du projet
 
@@ -211,6 +287,6 @@ case "$AI" in
 EOF
     printf '\033[0m\n' ;;
   "Codex")
-    say "Pret dans $DIR — lancement de Codex."
+    say "Pret dans $DIR, lancement de Codex."
     exec codex "$PROMPT" ;;
 esac
