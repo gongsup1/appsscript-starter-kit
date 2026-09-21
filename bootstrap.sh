@@ -77,19 +77,23 @@ run_quiet() {
 # terminaux et l'app Claude. Sur Mac Apple Silicon, Homebrew vit dans /opt/homebrew, hors du
 # PATH par defaut ; son installeur AFFICHE la ligne a ajouter au profil mais ne l'ajoute pas.
 # Sans elle, node / npm / clasp / gh sont "introuvables" des qu'on sort de ce script.
+# On l'ecrit dans DEUX fichiers : ~/.zprofile (recommandation Homebrew, lu par le Terminal) et
+# ~/.zshrc (le fichier que la doc Claude desktop cite pour recuperer le PATH).
 # Retourne 1 si Homebrew n'est pas installe.
 load_brew() {
   local b profile line
   for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
     [ -x "$b" ] || continue
     eval "$("$b" shellenv)"
-    case "$(basename "${SHELL:-zsh}")" in
-      bash) profile="$HOME/.bash_profile" ;;
-      *)    profile="$HOME/.zprofile" ;;
-    esac
     line="eval \"\$($b shellenv)\""
-    grep -qsF "$line" "$profile" ||
-      printf '\n# Homebrew (ajoute par le bootstrap GONG)\n%s\n' "$line" >>"$profile"
+    case "$(basename "${SHELL:-zsh}")" in
+      bash) set -- "$HOME/.bash_profile" "$HOME/.bashrc" ;;
+      *)    set -- "$HOME/.zprofile" "$HOME/.zshrc" ;;
+    esac
+    for profile in "$@"; do
+      grep -qsF "$line" "$profile" ||
+        printf '\n# Homebrew (ajoute par le bootstrap GONG)\n%s\n' "$line" >>"$profile"
+    done
     return 0
   done
   return 1
@@ -272,7 +276,8 @@ case "$AI" in
    envoyee avec Entree, qui met l'assistant au travail.
 
    Dans l'app Claude qui vient de s'ouvrir :
-     1. Clique l'onglet   Code   (en haut).
+     1. Clique l'onglet   Code   (en haut). Pas Chat, pas Cowork :
+        seul l'onglet Code peut installer et publier ton app.
      2. Clique   Select folder   et choisis le dossier ci-dessus.
      3. Clique dans la zone de saisie, COLLE la phrase avec Cmd+V
         (elle est deja copiee), puis appuie sur Entree :
