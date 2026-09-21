@@ -53,6 +53,8 @@ L'assistant suit **`AGENTS.md`** (chargé automatiquement, voir `CLAUDE.md`) et 
   modifiables sans redéployer.
 - **Secrets jamais dans le code ni Git** → Propriétés du script (aucun secret dans le kit pour l'instant). Dès qu'un secret ou une clé API apparaît, l'IA demande si l'utilisateur est absolument certain qu'il n'y a aucun risque ; au moindre doute, e-mail à `dev@gong-galaxy.com`.
 - **Deux environnements, DEV et PROD, jamais un de plus** : un seul code, deux projets Apps Script jumeaux, chacun avec son Sheet et **un seul** déploiement. On publie en DEV, on teste, puis la PROD reçoit le même code sur demande. En DEV, les notifications partent vers le développeur et les outils de test sont disponibles ; en PROD, jamais. Les adresses `/exec` ne changent jamais.
+- **Le code vit dans son Google Sheet** : chaque projet Apps Script, DEV comme PROD, est **rattaché** à son Sheet (*Extensions → Apps Script*), jamais autonome. Un ancien projet autonome est rattaché lors de sa reprise ; si des gens l'utilisent, son ancienne adresse devient un panneau vers la nouvelle (un clic).
+- **FX peut toujours reprendre la main** : il est Éditeur des deux Sheets (donc de leur code), vérifié avec l'utilisateur avant la création des projets et avant toute mise en PROD. Un collaborateur absent ne bloque jamais la maintenance de son app.
 - **Double versioning** : Git (le code) + Apps Script (`version`/`redeploy`).
 - **Code commenté en anglais, doc et interface en français.**
 

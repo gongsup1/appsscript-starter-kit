@@ -44,7 +44,7 @@ En permanence :
 - Si quelque chose sort du périmètre (nouveau scope sensible, changement d'URL publique)
   → **arrête-toi et renvoie vers FX** (§11). **Secret ou clé API** → **règle n°1** (question à
   l'utilisateur, e-mail à `dev@gong-galaxy.com` au moindre doute).
-- **Respecte les 11 règles d'or ci-dessous sans exception.**
+- **Respecte les 12 règles d'or ci-dessous sans exception.**
 
 ### ⚠️ Ordre impératif au démarrage
 
@@ -75,7 +75,7 @@ projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit fa
 
 ---
 
-## 1. Les 11 règles d'or (non négociables)
+## 1. Les 12 règles d'or (non négociables)
 
 1. **Secrets → jamais dans le code ni dans Git.** Clés API, mots de passe, jetons vivent dans les
    **Propriétés du script** (valeur jamais inventée ni recopiée ailleurs).
@@ -85,7 +85,9 @@ projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit fa
 2. **Deux déploiements, DEV et PROD, JAMAIS un de plus.** Chaque app = **un seul code**
    (un dépôt Git) et **deux projets Apps Script jumeaux**, « `<Nom>` (DEV) » (`.clasp.json`, cible
    par défaut) et « `<Nom>` (PROD) » (`.clasp.prod.json`), chacun **rattaché à son Google Sheet**
-   et doté d'**un seul** déploiement, créé une fois à la mise en place (§3). Ensuite, **uniquement**
+   et doté d'**un seul** déploiement, créé une fois à la mise en place (§3). **Jamais de projet
+   autonome** : le code vit dans son Sheet (*Extensions → Apps Script*), là où l'on peut le
+   retrouver, le ranger et le partager (un projet autonome existant est rattaché, Parcours B). Ensuite, **uniquement**
    `clasp redeploy` sur `DEPLOYMENT_ID_DEV` ou `DEPLOYMENT_ID_PROD` (notés dans `DEPLOY.md`).
    ❌ Jamais un nouveau déploiement, ❌ jamais supprimer un déploiement, ❌ jamais un troisième
    projet. **Ordre immuable** : DEV d'abord, PROD ensuite, avec le **même code** (même commit),
@@ -129,6 +131,13 @@ projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit fa
       commence par `requireDev_()`, qui la **refuse côté serveur** en PROD (cacher un bouton ne
       suffit pas : n'importe qui peut appeler une fonction serveur depuis la console du navigateur).
     - **Bandeau « Environnement DEV »** toujours visible en DEV, jamais en PROD.
+12. **Continuité : FX peut toujours reprendre la main.** FX (`fxd@gong-galaxy.com`) doit être
+    **Éditeur des deux Sheets**, donc de leur code rattaché (règle n°2) : par le dossier attitré
+    qu'il a partagé, ou par un partage direct. **Vérifie-le avec l'utilisateur AVANT de créer les
+    projets Apps Script et avant toute première mise en PROD** : il ouvre *Partager* sur chaque
+    Sheet et confirme que `fxd@gong-galaxy.com` y figure en Éditeur ; sinon, il l'ajoute. Pas de
+    vérification, pas de PROD. Motif : un collaborateur absent (vacances, départ) ne doit jamais
+    bloquer la maintenance de son app.
 
 Bonus : `access: DOMAIN` dans `appsscript.json` réserve l'app au domaine `@gong-galaxy.com`.
 Ne passe jamais en `ANYONE` sans validation de FX.
@@ -189,7 +198,7 @@ Il faut aussi un **dossier Drive** pour le projet (voir §3, étape 1).
 | | DEV | PROD |
 |---|---|---|
 | Pour qui | le développeur (et ses testeurs) | les utilisateurs |
-| Projet Apps Script | « `<Nom>` (DEV) », rattaché au Sheet DEV ; fichier `.clasp.json` : cible **par défaut** de clasp | « `<Nom>` (PROD) », rattaché au Sheet PROD ; fichier `.clasp.prod.json` : toujours `clasp -P .clasp.prod.json …` |
+| Projet Apps Script | « `<Nom>` (DEV) », rattaché au Sheet DEV ; fichier `.clasp.json` : cible **par défaut** de clasp | « `<Nom>` (PROD) », rattaché au Sheet PROD ; fichier `.clasp.prod.json` : toujours `clasp -P "$PWD/.clasp.prod.json" …` |
 | Google Sheet | « `<Nom>` (DEV) » : données de test | « `<Nom>` (PROD) » : vraies données |
 | Notifications | redirigées vers le développeur | vrais destinataires |
 | Tests, « voir en tant que », bandeau DEV | oui | non (refusés côté serveur) |
@@ -228,6 +237,8 @@ Dans tous les cas, demande aussi un **nom court** de projet (ex. `suivi-livraiso
 
 **A2. Dossier Drive + deux Sheets** (humain) : ouvre le **dossier qui t'a été attribué** pour tes projets (**FX t'en a partagé le lien** : c'est `<ID_DOSSIER_PERSO_DRIVE>`). **Dedans**, crée un **sous-dossier** au nom du projet, puis **à l'intérieur deux Google Sheets vides** : « `<Nom>` (DEV) » et « `<Nom>` (PROD) ». **Copie l'URL entière de chacun** (barre d'adresse du navigateur) et donne-les à l'IA en précisant lequel est lequel : pas besoin d'y repérer l'ID. Donne aussi l'**ID (ou l'URL) du dossier**. ⚠️ **N'ouvre pas encore *Extensions → Apps Script*** dans ces Sheets : c'est l'IA qui va y rattacher le code (sinon Google y crée un projet vide).
 
+**Accès de FX (règle n°12), à vérifier maintenant** : sur chacun des deux Sheets, clique *Partager* : `fxd@gong-galaxy.com` doit apparaître en **Éditeur**. S'ils sont dans le dossier attitré créé par FX, c'est automatique ; sinon, ajoute-le. L'IA ne passe pas à A3 sans ta confirmation.
+
 > Les Sheets **doivent** vivre dans ton dossier attitré : c'est là que FX peut les retrouver et
 > les auditer. L'IA **ne peut pas** créer ce dossier ni ces Sheets à ta place : écrire dans Drive
 > exige une autorisation Google qu'elle n'a pas (comme pour les secrets). Ces quelques clics
@@ -252,9 +263,9 @@ clasp push
 clasp version "v1 - squelette"                                      # → <num>
 clasp deploy -V <num> -d "<Nom> (DEV)"                              # → DEPLOYMENT_ID_DEV
 # 4. PROD : le MÊME code, SON déploiement (le seul, pour toujours).
-clasp -P .clasp.prod.json push
-clasp -P .clasp.prod.json version "v1 - squelette"                  # → <num_prod>
-clasp -P .clasp.prod.json deploy -V <num_prod> -d "<Nom> (PROD)"    # → DEPLOYMENT_ID_PROD
+clasp -P "$PWD/.clasp.prod.json" push
+clasp -P "$PWD/.clasp.prod.json" version "v1 - squelette"                  # → <num_prod>
+clasp -P "$PWD/.clasp.prod.json" deploy -V <num_prod> -d "<Nom> (PROD)"    # → DEPLOYMENT_ID_PROD
 ```
 Ces deux `clasp deploy` sont les **seuls** de toute la vie du projet (règle n°2). À la première ouverture de chaque adresse, Google demande d'autoriser l'app : c'est normal, l'utilisateur accepte.
 
@@ -301,18 +312,18 @@ clasp deployments <SCRIPT_ID_EXISTANT>     # liste les déploiements, sans rien 
 - **Plusieurs adresses réellement utilisées ?** Garde-en **une** comme PROD, **ne touche pas aux autres** (ni modification, ni suppression) et signale-les à FX (§11) : c'est lui qui décidera de leur sort.
 - Fais relever à l'utilisateur, dans l'éditeur du projet existant, les **déclencheurs** (icône horloge ⏰) et les **noms** des *Propriétés du script* (⚙️ *Paramètres du projet*, **jamais les valeurs**). Note-les dans `DEPLOY.md`. Ils restent en place : on n'y touche pas.
 
-**B3. Tout sauvegarder dans Git, AVANT toute modification** (l'IA). Si tu es parti du squelette, retire d'abord ses fichiers d'exemple `Code.js`, `Index.html` et `appsscript.json` (on va récupérer les vrais) ; garde tout le reste, **surtout `Env.js` et `.claspignore`**. Exemple quand le projet existant devient la PROD (s'il devient le DEV : écris `.clasp.json` au lieu de `.clasp.prod.json`, et retire `-P .clasp.prod.json` des commandes) :
+**B3. Tout sauvegarder dans Git, AVANT toute modification** (l'IA). Si tu es parti du squelette, retire d'abord ses fichiers d'exemple `Code.js`, `Index.html` et `appsscript.json` (on va récupérer les vrais) ; garde tout le reste, **surtout `Env.js` et `.claspignore`**. Exemple quand le projet existant devient la PROD (s'il devient le DEV : écris `.clasp.json` au lieu de `.clasp.prod.json`, et retire `-P "$PWD/.clasp.prod.json"` des commandes) :
 ```bash
 # Le projet existant = PROD : son fichier s'appelle d'emblée .clasp.prod.json, pour qu'un
 # clasp push sans précision ne puisse JAMAIS l'atteindre.
 printf '{"scriptId":"<SCRIPT_ID_EXISTANT>","rootDir":""}\n' > .clasp.prod.json
 git init -b main && git add -A && git commit -m "chore: kit GONG (guides, charte, Env.js)"
 # 1. Le code que voient les utilisateurs : exactement la version N servie en ce moment.
-clasp -P .clasp.prod.json pull --versionNumber <N>
+clasp -P "$PWD/.clasp.prod.json" pull --versionNumber <N>
 #    → cherche les secrets écrits en dur AVANT ce commit (ci-dessous)
 git add -A && git commit -m "sauvegarde: code en production (version <N>)" && git tag origine-prod
 # 2. Le code actuel de l'éditeur : il peut contenir du travail jamais publié.
-clasp -P .clasp.prod.json pull
+clasp -P "$PWD/.clasp.prod.json" pull
 git status     # des différences ? alors :
 git add -A && git commit -m "sauvegarde: travail non publié de l'éditeur" && git tag origine-editeur
 # 3. Tout part sur GitHub, étiquettes comprises.
@@ -327,23 +338,21 @@ gh repo create gongsup1/<nom-du-projet> --private --source=. --push && git push 
 
 À ce stade, **tout** est à l'abri : le code en production (`origine-prod`), le travail non publié (`origine-editeur`), la copie de test (branche `origine-copie-test`). Dis-le à l'utilisateur.
 
-**B4. Mettre en place le DEV** (quand le projet existant devient la PROD) :
-- **Copie de test existante** → c'est le DEV : `printf '{"scriptId":"<SCRIPT_ID_COPIE>","rootDir":""}\n' > .clasp.json` ; son Sheet est le Sheet DEV. Si l'un de ses déploiements est déjà utilisé par des testeurs (`clasp deployments <SCRIPT_ID_COPIE>`), garde-le comme `DEPLOYMENT_ID_DEV` ; sinon tu créeras le seul déploiement DEV en B6.
-- **Pas de copie** → on la crée (humain, guidé) : dans le dossier du projet, **Fichier → Créer une copie** du Sheet PROD, nommée « `<Nom>` (DEV) ». La copie contient les **vraies données** : demande à l'utilisateur s'il veut les garder pour tester ou vider les onglets de données de la **copie** (jamais ceux du Sheet PROD).
-  - Script **lié** : la copie du Sheet emporte une copie du script, c'est le **projet DEV**. Son Script ID : dans la copie, *Extensions → Apps Script* → ⚙️. Puis `printf '{"scriptId":"<SCRIPT_ID_DEV>","rootDir":""}\n' > .clasp.json`.
-  - Script **autonome** : la copie du Sheet n'emporte pas de script ; crée le projet DEV **rattaché** à la copie : `clasp create --title "<Nom> (DEV)" --parentId <ID_SHEET_DEV>` puis `git restore appsscript.json`. (La PROD, elle, reste autonome : la rattacher à un Sheet changerait son adresse. Son fichier sera rangé dans le dossier en B8.)
+**B4. Mettre en place le DEV** (quand le projet existant devient la PROD). Le DEV est **toujours un projet rattaché au Sheet DEV** :
+- **Copie de test existante** : son Sheet devient le Sheet DEV. Script **lié** à ce Sheet → c'est le DEV : `printf '{"scriptId":"<SCRIPT_ID_COPIE>","rootDir":""}\n' > .clasp.json` (si l'un de ses déploiements est déjà utilisé par des testeurs, garde-le comme `DEPLOYMENT_ID_DEV` ; sinon tu créeras le seul déploiement DEV en B6). Script **autonome** → crée le DEV rattaché à son Sheet : `clasp create --title "<Nom> (DEV)" --parentId <ID_SHEET_DEV>` puis `git restore appsscript.json` ; l'ancienne copie ne sert plus (son code est sauvegardé, B3).
+- **Pas de copie** → on la crée (humain, guidé) : dans le dossier du projet, **Fichier → Créer une copie** du Sheet PROD, nommée « `<Nom>` (DEV) ». La copie contient les **vraies données** : demande à l'utilisateur s'il veut les garder pour tester ou vider les onglets de données de la **copie** (jamais ceux du Sheet PROD). Script PROD **lié** : la copie emporte une copie du script, c'est le **projet DEV** (Script ID : dans la copie, *Extensions → Apps Script* → ⚙️ ; puis `printf '{"scriptId":"<SCRIPT_ID_DEV>","rootDir":""}\n' > .clasp.json`). Script PROD **autonome** : la copie n'a pas de script ; crée le DEV rattaché : `clasp create --title "<Nom> (DEV)" --parentId <ID_SHEET_DEV>` puis `git restore appsscript.json`.
 - Les **déclencheurs** ne sont pas copiés : recrée dans le DEV seulement ceux qui sont utiles aux tests (leurs notifications iront au développeur). Les **Propriétés du script** du DEV (clés…) : règle n°1.
+- **PROD d'origine autonome** : elle sera **rattachée à son Sheet** lors de la première mise en PROD (B7), avec un panneau sur son ancienne adresse. D'ici là, on n'y touche pas.
 
-**B5. Mettre en place la PROD** (quand le projet existant devient le DEV, simple prototype) : la nouvelle PROD est toujours **rattachée à son Sheet**. L'utilisateur fait **Fichier → Créer une copie** du Sheet DEV, nommée « `<Nom>` (PROD) », dans le dossier du projet, et **vide les onglets de données de cette copie** (la PROD démarre propre, en gardant onglets et mise en forme).
-- Script **lié** : la copie emporte le script, c'est le projet PROD (Script ID via *Extensions → Apps Script* → ⚙️ dans la copie), à écrire dans `.clasp.prod.json`.
-- Script **autonome** : la copie n'a pas de script ; crée la PROD rattachée à la copie :
+**B5. Mettre en place la PROD** (quand le projet existant devient le DEV, simple prototype) :
+- **Prototype autonome** : d'abord, remplace-le par un **DEV rattaché** au Sheet du prototype (personne ne l'utilise, rien à préserver côté adresse ; son code est sauvegardé, B3) :
   ```bash
-  mv .clasp.json .clasp.dev.json        # met le DEV de côté le temps de créer la PROD
-  clasp create --title "<Nom> (PROD)" --parentId <ID_SHEET_PROD>
-  mv .clasp.json .clasp.prod.json && mv .clasp.dev.json .clasp.json
+  mv .clasp.json .clasp.prototype.json    # l'ancien projet autonome, gardé pour mémoire
+  clasp create --title "<Nom> (DEV)" --parentId <ID_DU_SHEET_DU_PROTOTYPE>
   git restore appsscript.json
   ```
-- La PROD n'a **encore aucun déploiement** : son unique déploiement sera créé en B7. Côté DEV, si l'un des déploiements existants est déjà utilisé, garde-le comme `DEPLOYMENT_ID_DEV`.
+- Puis la **PROD, rattachée à son Sheet** : l'utilisateur fait **Fichier → Créer une copie** du Sheet DEV, nommée « `<Nom>` (PROD) », dans le dossier du projet, et **vide les onglets de données de cette copie** (la PROD démarre propre, en gardant onglets et mise en forme). La copie emporte le script rattaché du DEV : c'est le **projet PROD** (Script ID via *Extensions → Apps Script* → ⚙️ dans la copie), à écrire dans `.clasp.prod.json`.
+- La PROD n'a **encore aucun déploiement** : son unique déploiement sera créé en B7. Côté DEV : prototype déjà **lié** dont un déploiement est utilisé → garde-le comme `DEPLOYMENT_ID_DEV` ; sinon le seul déploiement DEV sera créé en B6.
 
 **B6. Remettre le code d'aplomb, dans le DEV uniquement** (l'IA). Trois temps, **chacun montré à l'utilisateur, commité à part et testé en DEV** avant de passer au suivant. Pendant tout ce temps, **la PROD ne bouge pas**.
 
@@ -374,26 +383,46 @@ gh repo create gongsup1/<nom-du-projet> --private --source=. --push && git push 
 **Publier et tester le DEV** : `clasp push`, `clasp version`, puis `clasp redeploy <DEPLOYMENT_ID_DEV> …` s'il existe déjà, sinon `clasp deploy -V <num> -d "<Nom> (DEV)"` (le **seul** du DEV, pour toujours). Autorisations : règle n°9, dans l'éditeur du **DEV**. Teste avec l'utilisateur sur l'adresse DEV : tout doit marcher comme en PROD, plus les différences DEV (bandeau, notifications vers lui, outils de test).
 
 **B7. Première mise en production** (SEULEMENT quand l'utilisateur dit explicitement que le DEV est validé, et après sa confirmation) :
-- **Vérifications avant** : les déclencheurs et les noms de propriétés relevés en B2 correspondent à ce que le nouveau code attend ; `git status` est propre (exactement le code validé en DEV).
+- **Vérifications avant** : **règle n°12** (FX Éditeur des deux Sheets) ; les déclencheurs et les noms de propriétés relevés en B2 correspondent à ce que le nouveau code attend ; `git status` est propre (exactement le code validé en DEV).
 - **Publier** :
   ```bash
-  clasp -P .clasp.prod.json push              # ne change encore RIEN pour les utilisateurs
+  clasp -P "$PWD/.clasp.prod.json" push              # ne change encore RIEN pour les utilisateurs
   # nouveaux scopes (e-mail, Drive…) ? exécuter une fonction dans l'éditeur PROD et accepter (règle n°9)
-  clasp -P .clasp.prod.json version "vX - passage en DEV/PROD"                     # → <num>
-  clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <num> -d "<Nom> (PROD)"
+  clasp -P "$PWD/.clasp.prod.json" version "vX - passage en DEV/PROD"                     # → <num>
+  clasp -P "$PWD/.clasp.prod.json" redeploy <DEPLOYMENT_ID_PROD> -V <num> -d "<Nom> (PROD)"
   git tag prod-vX && git push --tags
   ```
-  PROD créée en B5 (pas encore de déploiement) : `clasp -P .clasp.prod.json deploy -V <num> -d "<Nom> (PROD)"` à la place du `redeploy`, le **seul** de la PROD.
-- **Vérifier tout de suite** l'adresse PROD (la même qu'avant) : l'app marche, sans bandeau DEV.
-- **Au moindre problème : retour arrière immédiat** vers la version N notée en B2, puis on corrige en DEV :
+  PROD créée en B5 (pas encore de déploiement) : `clasp -P "$PWD/.clasp.prod.json" deploy -V <num> -d "<Nom> (PROD)"` à la place du `redeploy`, le **seul** de la PROD.
+- **PROD d'origine autonome, avec des utilisateurs** : au lieu du `redeploy` ci-dessus, on la **rattache à son Sheet** (règle n°2), et son ancienne adresse devient un **panneau** qui renvoie vers la nouvelle en un clic. Anciens liens, favoris et QR codes continuent de mener à l'app. Explique-le à l'utilisateur et obtiens son accord avant de commencer.
+  1. **Nouvelle PROD rattachée** au Sheet PROD existant (mêmes données) :
+     ```bash
+     printf '{"scriptId":"<ANCIEN_SCRIPT_ID_PROD>","rootDir":"panneau"}\n' > .clasp.ancienne-prod.json
+     rm .clasp.prod.json
+     mv .clasp.json .clasp.dev.json          # met le DEV de côté le temps de créer la PROD
+     clasp create --title "<Nom> (PROD)" --parentId <ID_SHEET_PROD>
+     mv .clasp.json .clasp.prod.json && mv .clasp.dev.json .clasp.json
+     git restore appsscript.json
+     ```
+     Mets à jour `ENVIRONMENTS.PROD.scriptId` dans `Env.js`, commit, et republie le DEV (même code partout).
+  2. **Publier la nouvelle PROD** : `push`, autorisations (règle n°9, éditeur de la nouvelle PROD), propriétés du script (règle n°1), `version`, puis `clasp -P "$PWD/.clasp.prod.json" deploy -V <num> -d "<Nom> (PROD)"` : son **seul** déploiement, avec une **nouvelle adresse**, notée dans `DEPLOY.md`. Teste-la avec l'utilisateur.
+  3. **Déclencheurs** : recrée-les dans la nouvelle PROD (même fonction d'installation, lancée depuis son éditeur), puis, avec l'accord de l'utilisateur, retire-les de l'ancien projet (page *Déclencheurs*). Jamais les deux en même temps : ils tourneraient en double.
+  4. **Panneau sur l'ancienne adresse** : crée `panneau/Code.js` (recette §8.b, avec la nouvelle adresse) et `panneau/appsscript.json` (le manifeste d'origine, étiquette `origine-prod`, pour garder le même accès), commit, puis mets à jour le déploiement **existant** de l'ancien projet, sans en créer :
+     ```bash
+     clasp -P "$PWD/.clasp.ancienne-prod.json" push
+     clasp -P "$PWD/.clasp.ancienne-prod.json" version "panneau : nouvelle adresse"      # → <num_panneau>
+     clasp -P "$PWD/.clasp.ancienne-prod.json" redeploy <ANCIEN_DEPLOYMENT_ID> -V <num_panneau> -d "<Nom> : nouvelle adresse"
+     ```
+  5. **Retour arrière** si besoin : `clasp -P "$PWD/.clasp.ancienne-prod.json" redeploy <ANCIEN_DEPLOYMENT_ID> -V <N>` (l'app revient à l'ancienne adresse, version N de B2) et remets les déclencheurs dans l'ancien projet.
+- **Vérifier tout de suite** l'adresse PROD : l'app marche, sans bandeau DEV (et, si la PROD a été rattachée, l'ancienne adresse affiche le panneau).
+- **Au moindre problème : retour arrière immédiat** vers la version N notée en B2 (PROD liée), puis on corrige en DEV :
   ```bash
-  clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <N> -d "<Nom> (PROD)"
+  clasp -P "$PWD/.clasp.prod.json" redeploy <DEPLOYMENT_ID_PROD> -V <N> -d "<Nom> (PROD)"
   ```
 
 **B8. Ranger dans le dossier Drive attitré** (humain, guidé) :
 1. Dans **Drive**, ouvre ton **dossier attitré** (`<ID_DOSSIER_PERSO_DRIVE>`, lien partagé par FX).
 2. Crée un **sous-dossier** au nom du projet (s'il n'existe pas déjà).
-3. **Glisse** dedans les **deux Google Sheets** (DEV et PROD) **et**, s'il y en a un, le fichier du script **autonome** d'origine (un projet autonome qui a déjà des utilisateurs le reste : on le range à côté des Sheets).
+3. **Glisse** dedans les **deux Google Sheets** (DEV et PROD) : leur code rattaché les suit. S'il reste un ancien projet **autonome** (panneau de l'ancienne adresse, prototype remplacé), range aussi son fichier dans ce dossier.
 
 > **Sans risque :** déplacer ces fichiers dans un dossier **ne change ni les IDs, ni les adresses,
 > ni le fonctionnement du code** (la position dans Drive est indépendante des IDs). Un script
@@ -402,7 +431,7 @@ gh repo create gongsup1/<nom-du-projet> --private --source=. --push && git push 
 
 **B9. Vérifier et passer le relais** :
 - Adresse PROD **inchangée** et fonctionnelle ; adresse DEV fonctionnelle ; code et étiquettes `origine-*` sur GitHub ; `DEPLOY.md` rempli (DEV et PROD, version N de retour arrière, déclencheurs, noms des propriétés) ; tout est dans le dossier attitré.
-- Montre à l'utilisateur **où vit le code** : *Extensions → Apps Script* depuis chaque Sheet (ou, pour une PROD d'origine autonome, son fichier dans le dossier du projet).
+- Montre à l'utilisateur **où vit le code** : *Extensions → Apps Script* depuis chaque Sheet. Vérifie une dernière fois la **règle n°12** (FX Éditeur des deux Sheets).
 - **Dis clairement à l'utilisateur** : « À partir de maintenant, ne modifie plus le code dans l'éditeur Apps Script, ni en DEV ni en PROD : demande-moi. Une modification faite dans l'éditeur serait écrasée à la prochaine publication. » ✅ → passe à la **Phase finale**.
 
 ---
@@ -433,9 +462,11 @@ git branch -u origin/main
 clasp pull     # récupère le code actuellement dans le projet DEV
 git status     # des différences ?
 ```
-S'il y en a, montre-les à l'utilisateur, puis `git add -A && git commit -m "chore: resynchronisation avec le DEV" && git push`, **avant** toute modification. Ne fais **jamais** `clasp -P .clasp.prod.json pull` dans ce dossier : tu mélangerais le code de la PROD à ta copie de travail.
+S'il y en a, montre-les à l'utilisateur, puis `git add -A && git commit -m "chore: resynchronisation avec le DEV" && git push`, **avant** toute modification. Ne fais **jamais** `clasp -P "$PWD/.clasp.prod.json" pull` dans ce dossier : tu mélangerais le code de la PROD à ta copie de travail.
 
 **C4. Vérifier** : `DEPLOY.md` contient `DEPLOYMENT_ID_DEV` et `DEPLOYMENT_ID_PROD` (ce sont eux qu'on continuera à `redeploy`, jamais un nouveau) ; `Env.js` est renseigné ; `.claspignore` est présent s'il y a un dossier `design-system/` (sinon le remettre, §9). ✅ → passe à la **Phase finale**.
+
+> **Projet dont les scripts sont autonomes** (créé avant que le kit ne les rattache aux Sheets) : rattache-les. DEV : `clasp create --title "<Nom> (DEV)" --parentId <ID_SHEET_DEV>` (après `mv .clasp.json .clasp.ancien-dev.json`), mets à jour `Env.js`, crée son seul déploiement (la nouvelle adresse DEV remplace l'ancienne, réservée au développeur). PROD : procédure « PROD d'origine autonome » de B7 (panneau sur l'ancienne adresse). Vérifie la règle n°12 avant tout.
 
 > **Projet créé avant l'arrivée de DEV/PROD** (pas de `Env.js` ni de `.clasp.prod.json` dans le dépôt) : son projet Apps Script actuel **devient la PROD**. Applique le Parcours B à partir de B2 : le dépôt existe déjà (pas de `gh repo create`), et la sauvegarde B3 se limite à vérifier que GitHub contient bien la version en service (`clasp pull --versionNumber <N>` puis `git status`).
 
@@ -473,18 +504,18 @@ Modifier le code (fichiers locaux ; JAMAIS dans l'éditeur Apps Script en ligne)
    │
    └─► 2. Passer en PROD : SEULEMENT sur demande explicite de l'utilisateur, après confirmation,
           et SEULEMENT un code déjà publié et testé en DEV (même commit, git status propre) :
-          clasp -P .clasp.prod.json push
-          clasp -P .clasp.prod.json version "v4 - …"        # → <num_prod> (différent de <num> : normal)
-          clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <num_prod> -d "<Nom> (PROD)"
+          clasp -P "$PWD/.clasp.prod.json" push
+          clasp -P "$PWD/.clasp.prod.json" version "v4 - …"        # → <num_prod> (différent de <num> : normal)
+          clasp -P "$PWD/.clasp.prod.json" redeploy <DEPLOYMENT_ID_PROD> -V <num_prod> -d "<Nom> (PROD)"
           git tag prod-v4 && git push --tags
 ```
 
 - **Jamais de `clasp deploy` ici** : on ne fait que `redeploy` les deux déploiements existants (règle n°2).
 - **Nouveau scope** (e-mail, Drive…) : règle n°9, dans l'éditeur du DEV avant le `redeploy` DEV, puis dans l'éditeur de la PROD avant le `redeploy` PROD.
 - **Numéro de version TOUJOURS affiché en pied de page** (`APP_VERSION`, injecté par `doGet`). Mets-le à jour à chaque publication en DEV ; quand la PROD reçoit le même code, elle affiche le même numéro. Les numéros de version clasp diffèrent entre les deux projets : c'est normal, seul `APP_VERSION` compte pour les humains.
-- **Retour arrière PROD** (la nouveauté pose problème) : republie la version précédente, instantanément, puis corrige en DEV. Les versions : `clasp -P .clasp.prod.json versions`.
+- **Retour arrière PROD** (la nouveauté pose problème) : republie la version précédente, instantanément, puis corrige en DEV. Les versions : `clasp -P "$PWD/.clasp.prod.json" versions`.
   ```bash
-  clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <version précédente> -d "<Nom> (PROD)"
+  clasp -P "$PWD/.clasp.prod.json" redeploy <DEPLOYMENT_ID_PROD> -V <version précédente> -d "<Nom> (PROD)"
   ```
 - **Astuce cache** : juste après un `redeploy`, un appareil peut afficher l'ancien code
   (cache navigateur). Forcer avec `?cb=1` à la fin de l'URL, ou vider le cache du site.
@@ -510,7 +541,7 @@ Le squelette est déjà en place - adapte-le, ne repars pas de zéro :
 | `.gitignore` | Exclut jetons clasp, `node_modules`, sauvegardes, tout fichier de secret. |
 | `.claspignore` | Ce que `clasp push` **n'envoie pas** : `design-system/` (ses sources casseraient l'app côté serveur). Ne pas supprimer. |
 | `.clasp.json` | Projet Apps Script **DEV** : cible par défaut de `clasp`. |
-| `.clasp.prod.json` | Projet Apps Script **PROD** : uniquement via `clasp -P .clasp.prod.json …`, sur demande de l'utilisateur. |
+| `.clasp.prod.json` | Projet Apps Script **PROD** : uniquement via `clasp -P "$PWD/.clasp.prod.json" …`, sur demande de l'utilisateur. |
 | `design-system/` | **Charte graphique** partagée : `brand.css` (tokens + composants), `header.js` (`<app-header>`), `GUIDELINES.md` (règles d'usage), `showcase.html` (aperçu). Voir la section suivante. Reste en local, jamais poussé (`.claspignore`). |
 
 ---
@@ -667,6 +698,30 @@ function testNotify() {
 }
 ```
 
+### 8.b - Panneau « l'application a déménagé » (Parcours B, PROD d'origine autonome)
+
+Code de l'**ancien** projet autonome une fois la PROD rattachée à son Sheet (B7). Il vit dans `panneau/` (exclu du projet principal par `.claspignore`) et n'est poussé que vers l'ancien projet (`.clasp.ancienne-prod.json`, `"rootDir": "panneau"`).
+
+```js
+/* ============ SIGNPOST: the app moved to a new address ============ */
+// Deployed on the OLD address of a PROD that was bound to its Google Sheet (AGENTS.md B7).
+// Apps Script forbids automatic redirects (no top navigation without a click): the user clicks.
+const NEW_URL = '<URL_EXEC_PROD>';
+
+function doGet() {
+  const html =
+    '<base target="_top">' +
+    '<div style="font-family:system-ui,sans-serif;max-width:480px;margin:15vh auto;padding:0 16px;text-align:center">' +
+    '<h1 style="font-size:1.3rem">Cette application a changé d\'adresse</h1>' +
+    '<p>Pense à mettre à jour ton favori ou ton lien.</p>' +
+    '<p><a href="' + NEW_URL + '" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;border-radius:6px;text-decoration:none">Ouvrir l\'application</a></p>' +
+    '</div>';
+  return HtmlService.createHtmlOutput(html)
+    .setTitle('Nouvelle adresse')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+```
+
 > **Pas de SMS pour l'instant.** Le kit n'a pas de recette SMS : tout service d'envoi de SMS demande une clé API, et leur transmission n'est pas encore définie (§7). Besoin de SMS → **règle n°1** (e-mail à `dev@gong-galaxy.com`), n'improvise pas de solution.
 
 ---
@@ -689,7 +744,8 @@ function testNotify() {
 | `node`, `clasp`, `brew` ou `gh` : « command not found » | Homebrew (Mac Apple Silicon) absent du PATH | Ligne `brew shellenv` dans `~/.zprofile`, puis quitter (Cmd+Q) et rouvrir l'app Claude (§2) |
 | Premier `git commit` refusé : « Please tell me who you are » | Identité Git jamais configurée sur ce poste | `git config --global user.name` / `user.email` (§2) |
 | Toute l'app en erreur « Environnement inconnu (projet …) » | `ENVIRONMENTS` (`Env.js`) pas renseigné, ou projet copié (nouvel ID) | Renseigner les deux Script IDs dans `Env.js`, puis republier. Un projet copié n'est **ni** DEV **ni** PROD tant qu'on ne l'a pas déclaré |
-| *Extensions → Apps Script* depuis le Sheet montre un projet vide | Google a créé ce projet vide quand quelqu'un a ouvert le menu avant que le script soit rattaché ; ou projet d'origine autonome (Parcours B) | Le vrai code s'ouvre avec `clasp open-script` (DEV) ou `clasp -P .clasp.prod.json open-script` (PROD). N'écris rien dans le projet vide ; à la mise en place, réutilise-le (A3) |
+| FX (ou un collègue) n'a pas accès au code d'une app | Script autonome dans le Mon Drive du créateur, ou Sheets hors du dossier partagé | Règles n°2 et n°12 : scripts rattachés aux Sheets, FX Éditeur des deux Sheets. Pour un ancien projet autonome, seul son propriétaire peut le partager : à faire **avant** son absence |
+| *Extensions → Apps Script* depuis le Sheet montre un projet vide | Google a créé ce projet vide quand quelqu'un a ouvert le menu avant que le script soit rattaché ; ou projet d'origine autonome (Parcours B) | Le vrai code s'ouvre avec `clasp open-script` (DEV) ou `clasp -P "$PWD/.clasp.prod.json" open-script` (PROD). N'écris rien dans le projet vide ; à la mise en place, réutilise-le (A3) |
 | « Fonction réservée à l'environnement DEV » | Fonction de test appelée en PROD | Normal : `requireDev_()` fait son travail (règle n°11) |
 | Une modif faite dans l'éditeur Apps Script a disparu | La publication suivante a écrasé le code en ligne par celui de Git | Ne jamais modifier dans l'éditeur (règle n°3) ; retrouver la modif dans l'historique des versions de l'éditeur si besoin |
 | Un test a envoyé un e-mail à une vraie personne | Envoi direct par `MailApp`/`GmailApp`, hors `notify_()` | Tout envoi passe par `notify_()` (§8.a) ; chercher `MailApp\|GmailApp` dans le code |
@@ -699,8 +755,10 @@ function testNotify() {
 ## 10. Checklist avant de dire « c'est prêt »
 
 - [ ] **DEV** : `clasp push` sans erreur, `clasp version` + `clasp redeploy <DEPLOYMENT_ID_DEV>` faits, testé avec l'utilisateur sur l'adresse DEV.
-- [ ] **PROD** (seulement si l'utilisateur l'a demandé) : le **même commit** que le DEV, `clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD>` fait, adresse PROD vérifiée, étiquette `prod-vX` poussée.
+- [ ] **PROD** (seulement si l'utilisateur l'a demandé) : le **même commit** que le DEV, `clasp -P "$PWD/.clasp.prod.json" redeploy <DEPLOYMENT_ID_PROD>` fait, adresse PROD vérifiée, étiquette `prod-vX` poussée.
 - [ ] Toujours **exactement deux** déploiements : aucun `clasp deploy` en dehors de la mise en place (règle n°2).
+- [ ] Les deux projets sont **rattachés à leur Sheet** (*Extensions → Apps Script* montre le code) ; aucun projet autonome (règle n°2).
+- [ ] **FX est Éditeur des deux Sheets**, vérifié avec l'utilisateur (règle n°12).
 - [ ] `git commit` + `git push` faits (le code est sur GitHub).
 - [ ] `APP_VERSION` (dans `Code.js`) = numéro publié, **visible en pied de page** ; « · DEV » affiché en DEV seulement.
 - [ ] **Règle n°11** : tous les e-mails passent par `notify_()` ; toute fonction de test, de debug ou de « voir en tant que » commence par `requireDev_()` ; bandeau DEV visible en DEV, absent en PROD.

@@ -7,7 +7,7 @@
 | | DEV | PROD |
 |---|---|---|
 | Projet Apps Script (Script ID) | `<SCRIPT_ID_DEV>` | `<SCRIPT_ID_PROD>` |
-| Fichier clasp | `.clasp.json` (cible par défaut) | `.clasp.prod.json` (toujours `-P .clasp.prod.json`) |
+| Fichier clasp | `.clasp.json` (cible par défaut) | `.clasp.prod.json` (toujours `-P "$PWD/.clasp.prod.json"`) |
 | Google Sheet (URL ou ID) | `<URL_OU_ID_SHEET_DEV>` | `<URL_OU_ID_SHEET_PROD>` |
 | **Deployment ID : le SEUL, n'en créer JAMAIS d'autre** | `<DEPLOYMENT_ID_DEV>` | `<DEPLOYMENT_ID_PROD>` |
 | Adresse de l'app `/exec` (ne change jamais) | `<URL_EXEC_DEV>` | `<URL_EXEC_PROD>` |
@@ -49,16 +49,16 @@ clasp redeploy <DEPLOYMENT_ID_DEV> -V <num> -d "<NOM_DU_PROJET> (DEV)"
 **2. En PROD, seulement sur demande de l'utilisateur, avec le code déjà testé en DEV :**
 
 ```bash
-clasp -P .clasp.prod.json push
-clasp -P .clasp.prod.json version "description"   # → note le numéro <num_prod>
-clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <num_prod> -d "<NOM_DU_PROJET> (PROD)"
+clasp -P "$PWD/.clasp.prod.json" push
+clasp -P "$PWD/.clasp.prod.json" version "description"   # → note le numéro <num_prod>
+clasp -P "$PWD/.clasp.prod.json" redeploy <DEPLOYMENT_ID_PROD> -V <num_prod> -d "<NOM_DU_PROJET> (PROD)"
 git tag prod-vX && git push --tags
 ```
 
 **Retour arrière PROD** (la nouveauté pose problème) : republier la version précédente, puis corriger en DEV.
 
 ```bash
-clasp -P .clasp.prod.json redeploy <DEPLOYMENT_ID_PROD> -V <version précédente> -d "<NOM_DU_PROJET> (PROD)"
+clasp -P "$PWD/.clasp.prod.json" redeploy <DEPLOYMENT_ID_PROD> -V <version précédente> -d "<NOM_DU_PROJET> (PROD)"
 ```
 
 - ❌ **Jamais** `clasp deploy` (créerait une **nouvelle** adresse → liens/QR morts, et un troisième déploiement).

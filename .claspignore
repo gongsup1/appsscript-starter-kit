@@ -6,3 +6,7 @@
 # toute l'app au chargement (« ReferenceError: HTMLElement is not defined »).
 design-system/**
 node_modules/**
+
+# panneau/ : page « l'application a déménagé », poussée UNIQUEMENT vers l'ancien projet d'une
+# PROD rattachée à son Sheet (AGENTS.md B7, .clasp.ancienne-prod.json). Jamais dans l'app elle-même.
+panneau/**
