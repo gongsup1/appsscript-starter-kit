@@ -232,22 +232,43 @@ esac
 
 # --- 4. Nom du projet + dossier de travail (~/coding-projects/<nom>) ---
 progress "Nom du projet et dossier de travail"
+# La meme commande sert aussi a ROUVRIR un projet deja present sur ce Mac : on liste ceux du
+# kit (un dossier avec AGENTS.md), et taper l'un de ces noms rouvre Claude dessus.
+EXISTING=""
+for d in "$HOME"/coding-projects/*/; do
+  [ -f "${d}AGENTS.md" ] && EXISTING="$EXISTING $(basename "$d")"
+done
+if [ -n "$EXISTING" ]; then
+  say "Tes projets sur ce Mac :$EXISTING"
+  echo "   -> Tape le nom de l'un d'eux pour le ROUVRIR, ou un nouveau nom pour CREER un projet."
+fi
 read -rp "$(printf '\033[1;36m> Nom court du projet (ex. suivi-livraisons) : \033[0m')" NAME
 # Nom normalise en minuscules ASCII ("Équipe Livraisons" -> "equipe-livraisons") : il sert de
-# nom de dossier, de repo GitHub, et son chemin sera colle dans la fenetre de choix de dossier.
+# nom de dossier et de repo GitHub.
 NAME="$(printf '%s' "$NAME" \
   | LC_ALL=en_US.UTF-8 sed 'y/àâäéèêëîïôöùûüÿçÀÂÄÉÈÊËÎÏÔÖÙÛÜŸÇ/aaaeeeeiioouuuycAAAEEEEIIOOUUUYC/' \
   | tr ' _' '--' | LC_ALL=C tr -cd 'A-Za-z0-9-' | tr 'A-Z' 'a-z' \
   | sed 's/--*/-/g; s/^-//; s/-$//')"
 [ -n "$NAME" ] || { echo "Nom vide : on arrete." >&2; exit 1; }
 DIR="$HOME/coding-projects/$NAME"
-[ -e "$DIR" ] && { echo "$DIR existe deja : choisis un autre nom, ou ouvre-le directement." >&2; exit 1; }
-mkdir -p "$DIR"
+MODE="new"
+if [ -e "$DIR" ]; then
+  if [ -f "$DIR/AGENTS.md" ]; then
+    MODE="reopen"
+  else
+    echo "$DIR existe deja mais n'est pas un projet du kit : choisis un autre nom." >&2
+    exit 1
+  fi
+else
+  mkdir -p "$DIR"
+fi
 
 # --- 5. Recuperer le squelette (repo public, sans historique Git) ---
 progress "Telechargement du squelette"
+if [ "$MODE" = "reopen" ]; then
+  say "Projet existant : rien a telecharger, on le rouvre tel quel."
 # En cas d'echec, on supprime le dossier a moitie cree : sinon la relance bute sur "existe deja".
-if ! curl -fsSL "https://github.com/$ORG/$REPO/archive/$REF.tar.gz" | tar -xz -C "$DIR" --strip-components=1; then
+elif ! curl -fsSL "https://github.com/$ORG/$REPO/archive/$REF.tar.gz" | tar -xz -C "$DIR" --strip-components=1; then
   rm -rf "$DIR"
   echo "" >&2
   echo "Telechargement du squelette impossible (reseau ?)." >&2
@@ -255,14 +276,22 @@ if ! curl -fsSL "https://github.com/$ORG/$REPO/archive/$REF.tar.gz" | tar -xz -C
   exit 1
 fi
 cd "$DIR"
-rm -f bootstrap.sh   # l'installeur du template n'a rien a faire dans le repo du projet
+if [ "$MODE" = "new" ]; then
+  rm -f bootstrap.sh   # l'installeur du template n'a rien a faire dans le repo du projet
+fi
 
 # --- 6. Lancer l'assistant ---
 progress "Lancement de l'assistant"
 # La phrase porte le chemin attendu : si le mauvais dossier a ete ouvert (parent, sous-dossier
 # design-system/...), l'IA s'en apercoit et fait rouvrir le bon au lieu de travailler au mauvais
 # endroit. Sans accents : pbcopy peut abimer les caracteres accentues selon la langue du Mac.
-PROMPT="Lis AGENTS.md et aide-moi a demarrer mon application (projet : $NAME, dossier : $DIR). Verifie d'abord que tu travailles bien dans ce dossier."
+if [ "$MODE" = "reopen" ]; then
+  PROMPT="On reprend mon projet (projet : $NAME, dossier : $DIR). Verifie d'abord que tu travailles bien dans ce dossier, relis AGENTS.md et DEPLOY.md, puis demande-moi ce que je veux modifier."
+  HEADLINE="On rouvre ton projet :"
+else
+  PROMPT="Lis AGENTS.md et aide-moi a demarrer mon application (projet : $NAME, dossier : $DIR). Verifie d'abord que tu travailles bien dans ce dossier."
+  HEADLINE="Ton projet est pret dans :"
+fi
 case "$AI" in
   "Claude Code")
     # Lien de l'app Claude desktop qui ouvre une NOUVELLE session Code directement DANS le
@@ -284,7 +313,7 @@ case "$AI" in
     cat <<EOF
 
   ============================================================
-   Ton projet est pret dans :
+   $HEADLINE
      $DIR
 
    Claude s'ouvre sur ton projet (onglet Code), avec la phrase
@@ -302,8 +331,9 @@ case "$AI" in
    Select folder, choisis le dossier ci-dessus, puis colle la
    phrase (Cmd + V, elle est deja copiee) et Entree.
 
-   Pour REVENIR sur ce projet plus tard : ouvre l'app Claude,
-   onglet Code, il est dans tes dossiers recents.
+   Pour REVENIR sur ce projet plus tard : relance la meme
+   commande et tape le meme nom (ou app Claude, onglet Code,
+   dossiers recents).
   ============================================================
 EOF
     printf '\033[0m'

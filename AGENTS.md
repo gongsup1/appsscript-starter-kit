@@ -60,6 +60,8 @@ fonctionnalités de l'app avant que la plomberie soit en place** :
 3. **Seulement alors**, pose la question fonctionnelle (§3, *Phase finale*) : « décris /
    quelles évolutions veux-tu pour l'application ? », et itère (§4).
 
+**Projet rouvert** (la phrase commence par « On reprend mon projet ») : fais l'étape 0, puis lis `DEPLOY.md`. S'il reste des valeurs `<...>` non remplies, la mise en place avait été interrompue : reprends-la là où elle s'est arrêtée (vérifie `git status`, `clasp status`, `gh repo view gongsup1/<nom-du-projet>`) au lieu de la recommencer. Sinon, demande directement ce que l'utilisateur veut modifier (§4).
+
 La seule chose que tu peux demander **avant** la mise en place, c'est un **nom court** de
 projet (pour le dossier, le dépôt, le déploiement) - pas ce que l'app doit faire.
 
