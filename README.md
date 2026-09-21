@@ -19,8 +19,7 @@ Le script demande **quel assistant IA** (Claude Code ou Codex) et le **nom du pr
 
 L'ouverture passe par le lien `claude://code/new?folder=…&q=…` de l'app Claude (celui de son action Finder « New Claude Code Session Here »). Ce lien n'est pas documenté publiquement : le script affiche un plan B manuel (onglet Code → Select folder, phrase dans le presse-papier). La phrase porte le chemin attendu : si le mauvais dossier a été ouvert, l'IA le détecte et rouvre le bon (`AGENTS.md`, étape 0).
 
-> **Revenir sur un projet** plus tard : ouvre l'app Claude → onglet **Code** → il est dans tes
-> **dossiers récents** (pas besoin du terminal).
+> **Une seule règle** : pour **démarrer** (nouveau projet, ou projet existant pas encore sur ce Mac), la commande ci-dessus ; pour **continuer** un projet, l'app Claude → onglet **Code** → le projet est dans la liste (pas besoin du terminal).
 
 L'assistant suit **`AGENTS.md`** (chargé automatiquement, voir `CLAUDE.md`) et déroule tout :
 connexions, création du repo **dans l'org** (privé), projet Apps Script, branchement du Google
@@ -49,7 +48,7 @@ Sheet, déploiement, puis itérations.
 | `DEPLOY.md` | Mémo de déploiement par projet (IDs + commande de publication). |
 | `.gitignore` | Exclut jetons et tout fichier de secret. |
 | `.claspignore` | Empêche `clasp push` d'envoyer `design-system/` chez Google (ses sources feraient planter l'app côté serveur). |
-| `bootstrap.sh` | Commande d'install « une ligne » (Mac) : choisit l'assistant, installe Node + l'**app Claude desktop** (cask `claude`, ou **Codex** CLI), récupère le squelette, ouvre l'app. |
+| `bootstrap.sh` | Commande d'install « une ligne » (Mac) : choisit l'assistant, installe Node + l'**app Claude desktop** (cask `claude`, ou **Codex** CLI), récupère le squelette, ouvre l'app sur le projet. |
 
 ## Principes (résumé)
 
@@ -67,6 +66,11 @@ Node + `clasp` (≥ 3.3), `git`, `gh` (GitHub CLI). Un compte Google Workspace
 `AGENTS.md` §2.
 
 ---
+
+## Pour FX : comportements à connaître
+
+- **Filet de sécurité, non enseigné** : si quelqu'un relance la commande avec le nom d'un projet déjà présent dans `~/coding-projects/`, le script le rouvre dans Claude (phrase « On reprend mon projet… ») au lieu d'échouer ou de créer un doublon. Rien n'est téléchargé ni modifié.
+- **Plan B affiché par le script** : l'ouverture directe passe par le lien non documenté `claude://code/new`. S'il cesse de marcher après une mise à jour de l'app Claude, l'utilisateur a les instructions manuelles à l'écran ; il faudra alors revoir le script.
 
 ## Mise en place (pour FX, une seule fois)
 

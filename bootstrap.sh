@@ -232,8 +232,9 @@ esac
 
 # --- 4. Nom du projet + dossier de travail (~/coding-projects/<nom>) ---
 progress "Nom du projet et dossier de travail"
-# La meme commande sert aussi a ROUVRIR un projet deja present sur ce Mac : on liste ceux du
-# kit (un dossier avec AGENTS.md), et taper l'un de ces noms rouvre Claude dessus.
+# Filet de securite (pas une facon de faire enseignee : pour continuer un projet, on passe par
+# l'app Claude) : si la commande est relancee avec le nom d'un projet deja present, on le
+# rouvre dans Claude au lieu d'echouer ou de creer un doublon. On liste donc ceux du kit.
 EXISTING=""
 for d in "$HOME"/coding-projects/*/; do
   [ -f "${d}AGENTS.md" ] && EXISTING="$EXISTING $(basename "$d")"
@@ -331,9 +332,8 @@ case "$AI" in
    Select folder, choisis le dossier ci-dessus, puis colle la
    phrase (Cmd + V, elle est deja copiee) et Entree.
 
-   Pour REVENIR sur ce projet plus tard : relance la meme
-   commande et tape le meme nom (ou app Claude, onglet Code,
-   dossiers recents).
+   Pour REVENIR sur ce projet plus tard : ouvre l'app Claude,
+   onglet Code : ton projet est dans la liste.
   ============================================================
 EOF
     printf '\033[0m'
