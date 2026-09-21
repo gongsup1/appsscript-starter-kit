@@ -53,8 +53,8 @@ L'assistant suit **`AGENTS.md`** (chargé automatiquement, voir `CLAUDE.md`) et 
   modifiables sans redéployer.
 - **Secrets jamais dans le code ni Git** → Propriétés du script (aucun secret dans le kit pour l'instant). Dès qu'un secret ou une clé API apparaît, l'IA demande si l'utilisateur est absolument certain qu'il n'y a aucun risque ; au moindre doute, e-mail à `dev@gong-galaxy.com`.
 - **Deux environnements, DEV et PROD, jamais un de plus** : un seul code, deux projets Apps Script jumeaux, chacun avec son Sheet et **un seul** déploiement. On publie en DEV, on teste, puis la PROD reçoit le même code sur demande. En DEV, les notifications partent vers le développeur et les outils de test sont disponibles ; en PROD, jamais. Les adresses `/exec` ne changent jamais.
-- **Le code vit dans son Google Sheet** : chaque projet Apps Script, DEV comme PROD, est **rattaché** à son Sheet (*Extensions → Apps Script*), jamais autonome. Un ancien projet autonome est rattaché lors de sa reprise ; si des gens l'utilisent, son ancienne adresse devient un panneau vers la nouvelle (un clic).
-- **FX peut toujours reprendre la main** : il est Éditeur des deux Sheets (donc de leur code), vérifié avec l'utilisateur avant la création des projets et avant toute mise en PROD. Un collaborateur absent ne bloque jamais la maintenance de son app.
+- **Le code vit dans son Google Sheet** : un nouveau projet Apps Script, DEV comme PROD, est **rattaché** à son Sheet (*Extensions → Apps Script*). Un projet repris reste tel qu'il est (rattaché ou autonome), pour ne pas changer son adresse.
+- **Tout vit dans le Drive partagé GONG** : chaque app a son dossier, où se trouvent ses Sheets et ses éventuels scripts autonomes. Les fichiers appartiennent à GONG, FX y a accès d'office, et un collaborateur absent ne bloque jamais la maintenance de son app. Vérifié avec l'utilisateur avant la création des projets et avant toute mise en PROD.
 - **Double versioning** : Git (le code) + Apps Script (`version`/`redeploy`).
 - **Code commenté en anglais, doc et interface en français.**
 
@@ -80,8 +80,7 @@ Node + `clasp` (≥ 3.3), `git`, `gh` (GitHub CLI). Un compte Google Workspace
   leurs projets naîtront **dans l'org**, privés, possédés et auditables par GONG.
 - **`bootstrap.sh`** : `<ORG>`/`<REF>` déjà renseignés (**`gongsup1`** / **`main`**). La commande
   d'install pointe sur `raw.githubusercontent.com/gongsup1/appsscript-starter-kit/main/bootstrap.sh`.
-- **Dossiers Drive** : créer un dossier attitré par collaborateur, lui donner l'accès en
-  écriture, et lui transmettre l'**ID** du dossier.
+- **Drive partagé des apps GONG** : le créer une fois et y ajouter chaque collaborateur comme **Gestionnaire de contenu**. Chaque app y a son dossier (créé par le collaborateur au démarrage du projet). Déplacer un fichier dans ce Drive partagé ne change ni son ID ni l'adresse de l'app.
 - **E-mail** : rien à mettre en place. Les apps envoient avec `MailApp` (service Google natif), **depuis l'adresse du collaborateur** qui a déployé l'app. Quota Google : environ 1 500 destinataires par jour et par compte.
 - **Clés API** (SMS, services tiers) : pas dans le kit pour l'instant. Le mode de transmission des clés aux collaborateurs reste à définir ; d'ici là, l'IA fait envoyer toute demande de ce type à `dev@gong-galaxy.com`. **Cette boîte doit être surveillée.**
 - **Placeholders** : tous renseignés : `<ORG>`=`gongsup1`, `<REF>`=`main`.

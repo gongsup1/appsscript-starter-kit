@@ -14,7 +14,7 @@
 
 | | |
 |---|---|
-| Dossier Drive du projet | `<ID_DU_SOUS_DOSSIER_DRIVE>` |
+| Dossier de l'app (Drive partagé) | `<URL_DU_DOSSIER_DE_L_APP>` |
 | Repo GitHub | `<URL_DU_REPO_GITHUB>` |
 | Design | Charte GONG (ou : « hors charte, choix de l'utilisateur le `<date>` », AGENTS.md B6.c) |
 
