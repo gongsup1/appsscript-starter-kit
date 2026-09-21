@@ -275,7 +275,7 @@ Ces deux `clasp deploy` sont les **seuls** de toute la vie du projet (règle n°
 
 > **Un projet vide est déjà rattaché à un des Sheets** (l'utilisateur a ouvert *Extensions → Apps Script* trop tôt) ? **Réutilise-le** au lieu d'en rattacher un second : demande l'URL de l'éditeur ouvert depuis ce Sheet, puis écris son Script ID dans le bon fichier (`printf '{"scriptId":"<ID>","rootDir":""}\n' > .clasp.json`, ou `.clasp.prod.json` pour la PROD) ; le premier `clasp push` remplacera son contenu vide.
 
-**A4. Mémo + commit** : remplis `DEPLOY.md` (colonnes DEV et PROD) ; **remplace le README** par un court README du projet (titre = nom du projet, 1-2 lignes, pointe vers `DEPLOY.md` pour les adresses et IDs) ; **supprime `bootstrap.sh`** s'il est présent (c'est l'installeur du template, inutile dans un projet). Puis `git add -A && git commit -m "chore: bootstrap projet Apps Script (DEV + PROD)" && git push`.
+**A4. Mémo + README + commit** : remplis `DEPLOY.md` (colonnes DEV et PROD) ; **crée le README de l'app** : remplis `README.app.md` avec tout ce que tu sais déjà (nom, adresses DEV et PROD, dossier, Sheets, responsable ; « à compléter » pour les fonctionnalités), puis `git mv -f README.app.md README.md` (le README du kit n'a rien à faire dans le dépôt d'une app, c'est la première page que verra quelqu'un qui reprend l'app) ; **supprime `bootstrap.sh`** s'il est présent (c'est l'installeur du template, inutile dans un projet). Puis `git add -A && git commit -m "chore: bootstrap projet Apps Script (DEV + PROD)" && git push`.
 
 **A5. Vérifier les deux environnements** :
 - **DEV** : bandeau « Environnement DEV » ; le bouton « Ajouter une entrée de test » écrit une ligne dans le **Sheet DEV**, et seulement lui ; « Voir en tant que » change l'utilisateur affiché.
@@ -420,6 +420,7 @@ gh repo create gongsup1/<nom-du-projet> --private --source=. --push && git push 
 
 **B9. Vérifier et passer le relais** :
 - Adresse PROD **inchangée** et fonctionnelle ; adresse DEV fonctionnelle ; code et étiquettes `origine-*` sur GitHub ; `DEPLOY.md` rempli (DEV et PROD, version N de retour arrière, déclencheurs, noms des propriétés) ; tout est dans le dossier de l'app sur le Drive partagé.
+- **README de l'app** : remplis `README.app.md` à partir de ce que tu sais du projet (ce que fait l'app d'après son code, onglets du Sheet, déclencheurs relevés en B2, adresses, dossier, responsable), puis `git mv -f README.app.md README.md` pour remplacer le README du kit ; commit et push.
 - Montre à l'utilisateur **où vit le code** : *Extensions → Apps Script* depuis chaque Sheet rattaché, ou le fichier du script autonome dans le dossier de l'app.
 - **Dis clairement à l'utilisateur** : « À partir de maintenant, ne modifie plus le code dans l'éditeur Apps Script, ni en DEV ni en PROD : demande-moi. Une modification faite dans l'éditeur serait écrasée à la prochaine publication. » ✅ → passe à la **Phase finale**.
 
@@ -453,7 +454,11 @@ git status     # des différences ?
 ```
 S'il y en a, montre-les à l'utilisateur, puis `git add -A && git commit -m "chore: resynchronisation avec le DEV" && git push`, **avant** toute modification. Ne fais **jamais** `clasp -P "$PWD/.clasp.prod.json" pull` dans ce dossier : tu mélangerais le code de la PROD à ta copie de travail.
 
-**C4. Vérifier** : `DEPLOY.md` contient `DEPLOYMENT_ID_DEV` et `DEPLOYMENT_ID_PROD` (ce sont eux qu'on continuera à `redeploy`, jamais un nouveau) ; `Env.js` est renseigné ; `.claspignore` est présent s'il y a un dossier `design-system/` (sinon le remettre, §9). ✅ → passe à la **Phase finale**.
+**C4. Vérifier** : `DEPLOY.md` contient `DEPLOYMENT_ID_DEV` et `DEPLOYMENT_ID_PROD` (ce sont eux qu'on continuera à `redeploy`, jamais un nouveau) ; `Env.js` est renseigné ; `.claspignore` est présent s'il y a un dossier `design-system/` (sinon le remettre, §9) ; `README.md` décrit **l'app**. Si c'est encore le README du kit (titre « appsscript-starter-kit »), crée celui de l'app à partir du modèle, remplis-le à partir du code, de `DEPLOY.md` et des Sheets, commit et push :
+```bash
+curl -fsSL https://raw.githubusercontent.com/gongsup1/appsscript-starter-kit/main/README.app.md -o README.md
+```
+✅ → passe à la **Phase finale**.
 
 > **Scripts autonomes** (projet créé avant que le kit ne rattache les nouveaux scripts aux Sheets) : on ne les change pas. Vérifie seulement la règle n°12 : scripts et Sheets sont dans le dossier de l'app sur le Drive partagé ; sinon, leur propriétaire les y déplace (B3 bis). Seul le propriétaire peut le faire : à régler avant toute absence.
 
@@ -500,6 +505,7 @@ Modifier le code (fichiers locaux ; JAMAIS dans l'éditeur Apps Script en ligne)
 ```
 
 - **Jamais de `clasp deploy` ici** : on ne fait que `redeploy` les deux déploiements existants (règle n°2).
+- **README à jour à chaque passage en PROD** : ce que fait l'app, onglets, automatismes, et une ligne au *Journal des versions* (version, date, changements en mots simples). Commit « docs: README vX », push. Un commit qui ne touche que `README.md` ne change pas le code : la règle « même commit en DEV et en PROD » ne concerne que le code.
 - **Nouveau scope** (e-mail, Drive…) : règle n°9, dans l'éditeur du DEV avant le `redeploy` DEV, puis dans l'éditeur de la PROD avant le `redeploy` PROD.
 - **Numéro de version TOUJOURS affiché en pied de page** (`APP_VERSION`, injecté par `doGet`). Mets-le à jour à chaque publication en DEV ; quand la PROD reçoit le même code, elle affiche le même numéro. Les numéros de version clasp diffèrent entre les deux projets : c'est normal, seul `APP_VERSION` compte pour les humains.
 - **Retour arrière PROD** (la nouveauté pose problème) : republie la version précédente, instantanément, puis corrige en DEV. Les versions : `clasp -P "$PWD/.clasp.prod.json" versions`.
@@ -526,6 +532,7 @@ Le squelette est déjà en place - adapte-le, ne repars pas de zéro :
 | `Code.js` | Backend : `doGet` sert l'app, lecture/écriture du Sheet de l'environnement **par lots + cache + verrou**, onglets auto-créés. À adapter (`TABS`, `getState`, `addTestEntry`). |
 | `Index.html` | Front mono-page : appelle le backend via `google.script.run` (avec `VIEW_AS` en premier argument), `JSON.parse` des réponses. Bandeau DEV, bouton de test et « voir en tant que » rendus **en DEV seulement**. |
 | `DEPLOY.md` | Mémo de déploiement du projet : IDs DEV et PROD, commandes de publication et de retour arrière. |
+| `README.app.md` | Modèle du README **de l'app**. À la mise en place, tu le remplis et il remplace le README du kit (`git mv -f README.app.md README.md`) ; ensuite, tu tiens `README.md` à jour à chaque passage en PROD. |
 | `Styles.html`, `Header.html` | Copies de `design-system/brand.css` et `design-system/header.js` emballées en `.html`, seule forme qu'Apps Script sait servir. Incluses par `Index.html`. |
 | `.gitignore` | Exclut jetons clasp, `node_modules`, sauvegardes, tout fichier de secret. |
 | `.claspignore` | Ce que `clasp push` **n'envoie pas** : `design-system/` (ses sources casseraient l'app côté serveur). Ne pas supprimer. |
@@ -725,6 +732,7 @@ function testNotify() {
 - [ ] Nouveau projet : DEV et PROD **rattachés à leur Sheet** (*Extensions → Apps Script* montre le code) ; projet repris : laissé tel quel (règle n°2).
 - [ ] **Tous les fichiers du projet sont dans le dossier de l'app sur le Drive partagé**, vérifié avec l'utilisateur (règle n°12).
 - [ ] `git commit` + `git push` faits (le code est sur GitHub).
+- [ ] `README.md` décrit **l'app** (pas le kit) : adresses, dossier, Sheets, responsable, fonctionnalités, automatismes ; son *Journal des versions* est à jour de la dernière mise en PROD.
 - [ ] `APP_VERSION` (dans `Code.js`) = numéro publié, **visible en pied de page** ; « · DEV » affiché en DEV seulement.
 - [ ] **Règle n°11** : tous les e-mails passent par `notify_()` ; toute fonction de test, de debug ou de « voir en tant que » commence par `requireDev_()` ; bandeau DEV visible en DEV, absent en PROD.
 - [ ] L'interface respecte la **charte graphique** (`design-system/` : `brand.css` + `<app-header>` + tokens `--gg-*`), **sobre**, **responsive** (testée sur mobile), en-tête avec l'utilisateur connecté. Seule exception : design hors charte choisi par l'utilisateur, noté dans `DEPLOY.md` (B6.c).

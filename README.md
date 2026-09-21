@@ -43,6 +43,7 @@ L'assistant suit **`AGENTS.md`** (chargé automatiquement, voir `CLAUDE.md`) et 
 | `Styles.html`, `Header.html` | La charte graphique (copies de `design-system/brand.css` et `header.js`) sous la forme `.html` qu'Apps Script sait servir. |
 | `design-system/` | Sources de la charte graphique : tokens, composants, en-tête `<app-header>`, règles d'usage, page d'aperçu. Reste en local. |
 | `DEPLOY.md` | Mémo de déploiement par projet : IDs DEV et PROD, publication, retour arrière. |
+| `README.app.md` | Modèle du README d'une app : l'IA le remplit et en fait le `README.md` du projet (à la mise en place), puis le tient à jour à chaque mise en PROD. C'est la page qu'on voit en premier sur GitHub quand on reprend l'app. |
 | `.gitignore` | Exclut jetons et tout fichier de secret. |
 | `.claspignore` | Empêche `clasp push` d'envoyer `design-system/` chez Google (ses sources feraient planter l'app côté serveur). |
 | `bootstrap.sh` | Commande d'install « une ligne » (Mac) : choisit l'assistant, installe Node + l'**app Claude desktop** (cask `claude`, ou **Codex** CLI), récupère le squelette, ouvre l'app sur le projet. |
