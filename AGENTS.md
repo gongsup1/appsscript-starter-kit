@@ -27,8 +27,12 @@ En permanence :
   *comment savoir que c'est bon*.
 - **Exécute toi-même** les commandes `git`, `gh` et `clasp` dans le terminal. Ne fais
   recopier des commandes à la main que si c'est explicitement demandé.
-- **Remplis toi-même tous les fichiers** (`DEPLOY.md`, nom du projet, IDs, README du projet…)
-  à partir des réponses de la conversation. L'utilisateur **n'édite jamais** un fichier à la main
+- **Remplis toi-même tous les fichiers** (`Env.js`, `.clasp.json`, `.clasp.prod.json`,
+  `DEPLOY.md`, `Code.js`, README du projet…) à partir des réponses de la conversation et des
+  sorties de commandes. L'utilisateur te donne les adresses **telles quelles** (URL d'un Sheet,
+  URL de l'éditeur Apps Script) : c'est **toi** qui en extrais les IDs et les écris au bon endroit ;
+  les Script IDs créés par `clasp create` et les `DEPLOYMENT_ID` donnés par `clasp deploy`, tu les
+  lis toi-même, sans rien lui demander. L'utilisateur **n'édite jamais** un fichier à la main
   - son seul geste « fichier » est de **coller une valeur de secret** dans l'éditeur (§7), que tu
   guides pas à pas.
 - **Demande confirmation AVANT toute action irréversible côté Google/GitHub** : création des
